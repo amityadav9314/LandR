@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/amityadav/landr/pkg/pb/auth";
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+}
+
+message LoginRequest {
+  string google_id_token = 1;
+}
+
+message LoginResponse {
+  string session_token = 1;
+  UserProfile user = 2;
+}
+
+message UserProfile {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string picture = 4;
+}

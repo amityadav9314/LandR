@@ -3,20 +3,20 @@
 ## Phase 1: Backend Core (Go + gRPC + Postgres)
 
 ### 1.1. Project Initialization
-- [ ] Initialize Go module (`go mod init github.com/youruser/landr`)
-- [ ] Set up project structure (`cmd`, `internal`, `pkg`, `proto`)
-- [ ] Configure `Makefile` for common tasks (build, run, proto-gen)
+- [x] Initialize Go module (`go mod init github.com/youruser/landr`)
+- [x] Set up project structure (`cmd`, `internal`, `pkg`, `proto`)
+- [x] Configure `Makefile` for common tasks (build, run, proto-gen)
 
 ### 1.2. Protocol Buffers (gRPC)
-- [ ] Define `auth.proto` (Login)
-- [ ] Define `learning.proto` (AddMaterial, GetDueFlashcards, CompleteReview)
-- [ ] Generate Go code from protos (`protoc`)
+- [x] Define `auth.proto` (Login)
+- [x] Define `learning.proto` (AddMaterial, GetDueFlashcards, CompleteReview)
+- [x] Generate Go code from protos (`protoc`)
 
 ### 1.3. Database Setup
-- [ ] Set up PostgreSQL locally or via Docker
-- [ ] Define schema migration files (`users`, `materials`, `flashcards`)
-- [ ] Implement DB connection and migration runner (using `golang-migrate` or `pgx`)
-- [ ] Create `Store` interface and implementation for CRUD operations
+- [x] Set up PostgreSQL locally or via Docker
+- [x] Define schema migration files (`users`, `materials`, `flashcards`)
+- [x] Implement DB connection and migration runner (using `golang-migrate` or `pgx`)
+- [x] Create `Store` interface and implementation for CRUD operations
 
 ### 1.4. Authentication
 - [ ] Implement `AuthService.Login`
