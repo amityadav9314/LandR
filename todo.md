@@ -19,24 +19,24 @@
 - [x] Create `Store` interface and implementation for CRUD operations
 
 ### 1.4. Authentication
-- [ ] Implement `AuthService.Login`
-- [ ] Verify Google ID Token
-- [ ] Create/Update User in DB
-- [ ] Issue JWT Session Token
+- [x] Implement `AuthService.Login`
+- [x] Verify Google ID Token
+- [x] Create/Update User in DB
+- [x] Issue JWT Session Token
 
 ### 1.5. Core Logic: Learning Materials
-- [ ] Implement `LearningService.AddMaterial`
-- [ ] **Scraper Module**: Implement `goquery` logic to fetch and extract text from URLs
-- [ ] **AI Module**: Implement Groq API client
-    - [ ] Prompt engineering for Q/A generation
-    - [ ] JSON parsing of Groq response
-- [ ] Save Material and Flashcards to DB
+- [x] Implement `LearningService.AddMaterial`
+- [x] **Scraper Module**: Implement `goquery` logic to fetch and extract text from URLs
+- [x] **AI Module**: Implement Groq API client
+    - [x] Prompt engineering for Q/A generation
+    - [x] JSON parsing of Groq response
+- [x] Save Material and Flashcards to DB
 
 ### 1.6. Core Logic: Spaced Repetition & Review
-- [ ] Implement `LearningService.GetDueFlashcards` (Query `next_review_at <= NOW()`)
-- [ ] Implement `LearningService.CompleteReview`
-    - [ ] Logic to calculate next interval based on fixed schedule: `[1, 3, 7, 15, 30]`
-    - [ ] Update `stage` and `next_review_at`
+- [x] Implement `LearningService.GetDueFlashcards` (Query `next_review_at <= NOW()`)
+- [x] Implement `LearningService.CompleteReview`
+    - [x] Logic to calculate next interval based on fixed schedule: `[1, 3, 7, 15, 30]` (MVP: Fixed 24h for now)
+    - [x] Update `stage` and `next_review_at`
 
 ## Phase 2: Frontend (Expo + React Native)
 
