@@ -26,6 +26,21 @@ export interface AddMaterialResponse {
   tags: string[];
 }
 
+export interface MaterialSummary {
+  id: string;
+  title: string;
+  dueCount: number;
+  tags: string[];
+}
+
+export interface GetDueMaterialsResponse {
+  materials: MaterialSummary[];
+}
+
+export interface GetDueFlashcardsRequest {
+  materialId: string;
+}
+
 export interface Flashcard {
   id: string;
   question: string;
@@ -192,6 +207,180 @@ export const AddMaterialResponse: MessageFns<AddMaterialResponse> = {
     message.flashcardsCreated = object.flashcardsCreated ?? 0;
     message.title = object.title ?? "";
     message.tags = object.tags?.map((e) => e) || [];
+    return message;
+  },
+};
+
+function createBaseMaterialSummary(): MaterialSummary {
+  return { id: "", title: "", dueCount: 0, tags: [] };
+}
+
+export const MaterialSummary: MessageFns<MaterialSummary> = {
+  encode(message: MaterialSummary, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.title !== "") {
+      writer.uint32(18).string(message.title);
+    }
+    if (message.dueCount !== 0) {
+      writer.uint32(24).int32(message.dueCount);
+    }
+    for (const v of message.tags) {
+      writer.uint32(34).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): MaterialSummary {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMaterialSummary();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.dueCount = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.tags.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<MaterialSummary>): MaterialSummary {
+    return MaterialSummary.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<MaterialSummary>): MaterialSummary {
+    const message = createBaseMaterialSummary();
+    message.id = object.id ?? "";
+    message.title = object.title ?? "";
+    message.dueCount = object.dueCount ?? 0;
+    message.tags = object.tags?.map((e) => e) || [];
+    return message;
+  },
+};
+
+function createBaseGetDueMaterialsResponse(): GetDueMaterialsResponse {
+  return { materials: [] };
+}
+
+export const GetDueMaterialsResponse: MessageFns<GetDueMaterialsResponse> = {
+  encode(message: GetDueMaterialsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.materials) {
+      MaterialSummary.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetDueMaterialsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetDueMaterialsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.materials.push(MaterialSummary.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GetDueMaterialsResponse>): GetDueMaterialsResponse {
+    return GetDueMaterialsResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetDueMaterialsResponse>): GetDueMaterialsResponse {
+    const message = createBaseGetDueMaterialsResponse();
+    message.materials = object.materials?.map((e) => MaterialSummary.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetDueFlashcardsRequest(): GetDueFlashcardsRequest {
+  return { materialId: "" };
+}
+
+export const GetDueFlashcardsRequest: MessageFns<GetDueFlashcardsRequest> = {
+  encode(message: GetDueFlashcardsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.materialId !== "") {
+      writer.uint32(10).string(message.materialId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetDueFlashcardsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetDueFlashcardsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.materialId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GetDueFlashcardsRequest>): GetDueFlashcardsRequest {
+    return GetDueFlashcardsRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetDueFlashcardsRequest>): GetDueFlashcardsRequest {
+    const message = createBaseGetDueFlashcardsRequest();
+    message.materialId = object.materialId ?? "";
     return message;
   },
 };
@@ -411,7 +600,11 @@ export interface LearningServiceImplementation<CallContextExt = {}> {
     request: AddMaterialRequest,
     context: CallContext & CallContextExt,
   ): Promise<DeepPartial<AddMaterialResponse>>;
-  getDueFlashcards(request: Empty, context: CallContext & CallContextExt): Promise<DeepPartial<FlashcardList>>;
+  getDueMaterials(request: Empty, context: CallContext & CallContextExt): Promise<DeepPartial<GetDueMaterialsResponse>>;
+  getDueFlashcards(
+    request: GetDueFlashcardsRequest,
+    context: CallContext & CallContextExt,
+  ): Promise<DeepPartial<FlashcardList>>;
   completeReview(request: CompleteReviewRequest, context: CallContext & CallContextExt): Promise<DeepPartial<Empty>>;
 }
 
@@ -420,7 +613,14 @@ export interface LearningServiceClient<CallOptionsExt = {}> {
     request: DeepPartial<AddMaterialRequest>,
     options?: CallOptions & CallOptionsExt,
   ): Promise<AddMaterialResponse>;
-  getDueFlashcards(request: DeepPartial<Empty>, options?: CallOptions & CallOptionsExt): Promise<FlashcardList>;
+  getDueMaterials(
+    request: DeepPartial<Empty>,
+    options?: CallOptions & CallOptionsExt,
+  ): Promise<GetDueMaterialsResponse>;
+  getDueFlashcards(
+    request: DeepPartial<GetDueFlashcardsRequest>,
+    options?: CallOptions & CallOptionsExt,
+  ): Promise<FlashcardList>;
   completeReview(request: DeepPartial<CompleteReviewRequest>, options?: CallOptions & CallOptionsExt): Promise<Empty>;
 }
 

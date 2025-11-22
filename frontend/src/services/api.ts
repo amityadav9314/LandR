@@ -1,7 +1,7 @@
 import { createChannel, createClientFactory, ClientError, Status, Metadata } from 'nice-grpc-web';
 import { Platform } from 'react-native';
 import { AuthServiceClient } from '../../proto/auth';
-import { LearningServiceClient } from '../../proto/learning';
+import { LearningServiceClient } from '../../proto/backend/proto/learning/learning';
 import { AuthServiceDefinition, LearningServiceDefinition } from './definitions';
 import { API_URL } from '../utils/config';
 

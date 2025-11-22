@@ -9,7 +9,8 @@ import "google/protobuf/empty.proto";
 
 service LearningService {
   rpc AddMaterial(AddMaterialRequest) returns (AddMaterialResponse);
-  rpc GetDueFlashcards(google.protobuf.Empty) returns (FlashcardList);
+  rpc GetDueMaterials(google.protobuf.Empty) returns (GetDueMaterialsResponse);
+  rpc GetDueFlashcards(GetDueFlashcardsRequest) returns (FlashcardList);
   rpc CompleteReview(CompleteReviewRequest) returns (google.protobuf.Empty);
 }
 
@@ -24,6 +25,21 @@ message AddMaterialResponse {
   int32 flashcards_created = 2;
   string title = 3;
   repeated string tags = 4;
+}
+
+message MaterialSummary {
+  string id = 1;
+  string title = 2;
+  int32 due_count = 3;
+  repeated string tags = 4;
+}
+
+message GetDueMaterialsResponse {
+  repeated MaterialSummary materials = 1;
+}
+
+message GetDueFlashcardsRequest {
+  string material_id = 1;
 }
 
 message Flashcard {

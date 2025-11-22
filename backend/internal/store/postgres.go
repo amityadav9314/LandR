@@ -155,16 +155,16 @@ func (s *PostgresStore) CreateFlashcards(ctx context.Context, materialID string,
 	return nil
 }
 
-func (s *PostgresStore) GetDueFlashcards(ctx context.Context, userID string) ([]*learning.Flashcard, error) {
-	log.Printf("[Store.GetDueFlashcards] Querying flashcards for userID: %s", userID)
+func (s *PostgresStore) GetDueFlashcards(ctx context.Context, userID, materialID string) ([]*learning.Flashcard, error) {
+	log.Printf("[Store.GetDueFlashcards] Querying flashcards for userID: %s, materialID: %s", userID, materialID)
 	query := `
         SELECT f.id, f.question, f.answer, f.stage, m.title, m.id
         FROM flashcards f
         JOIN materials m ON f.material_id = m.id
-        WHERE m.user_id = $1
+        WHERE m.user_id = $1 AND m.id = $2
         ORDER BY f.id ASC;
     `
-	rows, err := s.db.Query(ctx, query, userID)
+	rows, err := s.db.Query(ctx, query, userID, materialID)
 	if err != nil {
 		log.Printf("[Store.GetDueFlashcards] Query failed: %v", err)
 		return nil, fmt.Errorf("failed to query flashcards: %w", err)
@@ -175,17 +175,16 @@ func (s *PostgresStore) GetDueFlashcards(ctx context.Context, userID string) ([]
 	for rows.Next() {
 		var card learning.Flashcard
 		var title string
-		var materialID string
-		if err := rows.Scan(&card.Id, &card.Question, &card.Answer, &card.Stage, &title, &materialID); err != nil {
+		var matID string
+		if err := rows.Scan(&card.Id, &card.Question, &card.Answer, &card.Stage, &title, &matID); err != nil {
 			log.Printf("[Store.GetDueFlashcards] Scan failed: %v", err)
 			return nil, fmt.Errorf("failed to scan flashcard: %w", err)
 		}
 		card.MaterialTitle = title
 
-		tags, err := s.GetMaterialTags(ctx, materialID)
+		tags, err := s.GetMaterialTags(ctx, matID)
 		if err != nil {
 			log.Printf("[Store.GetDueFlashcards] Failed to get tags: %v", err)
-			// Continue without tags
 			tags = []string{}
 		}
 		card.Tags = tags
@@ -194,6 +193,41 @@ func (s *PostgresStore) GetDueFlashcards(ctx context.Context, userID string) ([]
 	}
 
 	return flashcards, nil
+}
+
+func (s *PostgresStore) GetDueMaterials(ctx context.Context, userID string) ([]*learning.MaterialSummary, error) {
+	log.Printf("[Store.GetDueMaterials] Querying materials for userID: %s", userID)
+	query := `
+		SELECT m.id, m.title, COUNT(f.id) as due_count
+		FROM materials m
+		JOIN flashcards f ON m.id = f.material_id
+		WHERE m.user_id = $1
+		GROUP BY m.id, m.title
+		ORDER BY m.created_at DESC;
+	`
+	rows, err := s.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query materials: %w", err)
+	}
+	defer rows.Close()
+
+	var materials []*learning.MaterialSummary
+	for rows.Next() {
+		var m learning.MaterialSummary
+		if err := rows.Scan(&m.Id, &m.Title, &m.DueCount); err != nil {
+			return nil, fmt.Errorf("failed to scan material: %w", err)
+		}
+
+		tags, err := s.GetMaterialTags(ctx, m.Id)
+		if err != nil {
+			log.Printf("[Store.GetDueMaterials] Failed to get tags: %v", err)
+			tags = []string{}
+		}
+		m.Tags = tags
+
+		materials = append(materials, &m)
+	}
+	return materials, nil
 }
 
 func (s *PostgresStore) UpdateFlashcard(ctx context.Context, id string, stage int32, nextReviewAt time.Time) error {

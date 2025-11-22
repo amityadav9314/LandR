@@ -1,17 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { learningClient } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import { Flashcard } from '../../proto/learning';
+import { MaterialSummary } from '../../proto/backend/proto/learning/learning';
 
 // Define navigation types
 type RootStackParamList = {
     Home: undefined;
     AddMaterial: undefined;
-    Review: { flashcardId: string };
+    MaterialDetail: { materialId: string; title: string };
 };
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -21,61 +21,40 @@ export const HomeScreen = () => {
     const { user, logout } = useAuthStore();
 
     const { data, isLoading, error, refetch } = useQuery({
-        queryKey: ['dueFlashcards'],
+        queryKey: ['dueMaterials'],
         queryFn: async () => {
-            console.log('[HOME] Fetching due flashcards...');
+            console.log('[HOME] Fetching due materials...');
             try {
-                const response = await learningClient.getDueFlashcards({});
-                console.log('[HOME] Got flashcards:', response.flashcards?.length || 0);
-                return response.flashcards;
+                const response = await learningClient.getDueMaterials({});
+                console.log('[HOME] Got materials:', response.materials?.length || 0);
+                return response.materials;
             } catch (err) {
-                console.error('[HOME] Failed to fetch flashcards:', err);
-                // Return empty array on error so UI still renders
+                console.error('[HOME] Failed to fetch materials:', err);
                 return [];
             }
         },
     });
 
-    const groupedData = React.useMemo(() => {
-        if (!data) return [];
-
-        const groups: { [key: string]: Flashcard[] } = {};
-        data.forEach(card => {
-            const title = card.materialTitle || 'Untitled Material';
-            if (!groups[title]) {
-                groups[title] = [];
-            }
-            groups[title].push(card);
-        });
-
-        return Object.keys(groups).map(title => ({
-            title,
-            data: groups[title],
-            tags: groups[title][0]?.tags || [] // Assume all cards in material share tags for now, or take from first
-        }));
-    }, [data]);
-
-    const renderItem = ({ item }: { item: Flashcard }) => (
+    const renderItem = ({ item }: { item: MaterialSummary }) => (
         <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate('Review', { flashcardId: item.id })}
+            onPress={() => navigation.navigate('MaterialDetail', { materialId: item.id, title: item.title })}
         >
-            <Text style={styles.question}>{item.question}</Text>
-            <Text style={styles.stage}>Stage: {item.stage}</Text>
-        </TouchableOpacity>
-    );
+            <View style={styles.cardHeader}>
+                <Text style={styles.materialTitle}>{item.title}</Text>
+                <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{item.dueCount}</Text>
+                </View>
+            </View>
 
-    const renderSectionHeader = ({ section: { title, tags } }: { section: { title: string, tags: string[] } }) => (
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{title}</Text>
             <View style={styles.tagsContainer}>
-                {tags.map((tag, index) => (
+                {item.tags.map((tag, index) => (
                     <View key={index} style={styles.tagBadge}>
                         <Text style={styles.tagText}>{tag}</Text>
                     </View>
                 ))}
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -90,21 +69,19 @@ export const HomeScreen = () => {
             <Text style={styles.mainTitle}>Due for Review</Text>
 
             {error ? (
-                <Text style={styles.error}>Failed to load flashcards</Text>
+                <Text style={styles.error}>Failed to load materials</Text>
             ) : (
-                <SectionList
-                    sections={groupedData}
+                <FlatList
+                    data={data}
                     renderItem={renderItem}
-                    renderSectionHeader={renderSectionHeader}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.list}
                     refreshControl={
                         <RefreshControl refreshing={isLoading} onRefresh={refetch} />
                     }
                     ListEmptyComponent={
-                        <Text style={styles.empty}>No flashcards due! Good job.</Text>
+                        <Text style={styles.empty}>No materials due! Good job.</Text>
                     }
-                    stickySectionHeadersEnabled={false}
                 />
             )}
 
@@ -146,15 +123,43 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         color: '#333',
     },
-    sectionHeader: {
-        marginTop: 15,
+    list: {
+        paddingBottom: 80,
+    },
+    card: {
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 10,
     },
-    sectionTitle: {
+    materialTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#555',
-        marginBottom: 5,
+        color: '#333',
+        flex: 1,
+    },
+    badge: {
+        backgroundColor: '#4285F4',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginLeft: 10,
+    },
+    badgeText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     tagsContainer: {
         flexDirection: 'row',
@@ -170,29 +175,6 @@ const styles = StyleSheet.create({
     tagText: {
         fontSize: 12,
         color: '#555',
-    },
-    list: {
-        paddingBottom: 80,
-    },
-    card: {
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.41,
-    },
-    question: {
-        fontSize: 16,
-        color: '#333',
-        marginBottom: 5,
-    },
-    stage: {
-        fontSize: 12,
-        color: '#888',
     },
     error: {
         color: 'red',

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } fr
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { learningClient } from '../services/api';
-import { Flashcard } from '../../proto/learning';
+import { Flashcard } from '../../proto/backend/proto/learning/learning';
 
 type RootStackParamList = {
     Review: { flashcardId: string };
@@ -18,12 +18,20 @@ export const ReviewScreen = () => {
     const { flashcardId } = route.params;
     const [showAnswer, setShowAnswer] = useState(false);
 
-    // Fetch the specific flashcard (or find it in cache)
-    // Since we don't have getFlashcardById, we rely on the list or pass data.
-    // But for correctness, we should probably pass the data or fetch it.
-    // Given the MVP, let's assume we find it in the 'dueFlashcards' query cache.
-    const flashcards = queryClient.getQueryData<Flashcard[]>(['dueFlashcards']);
-    const flashcard = flashcards?.find(f => f.id === flashcardId);
+    // Find the flashcard from any material's cache
+    const flashcard = React.useMemo(() => {
+        const queryCache = queryClient.getQueryCache();
+        const queries = queryCache.findAll({ queryKey: ['dueFlashcards'] });
+
+        for (const query of queries) {
+            const data = query.state.data as any;
+            if (Array.isArray(data)) {
+                const found = data.find((f: any) => f.id === flashcardId);
+                if (found) return found;
+            }
+        }
+        return null;
+    }, [flashcardId, queryClient]);
 
     const mutation = useMutation({
         mutationFn: async () => {

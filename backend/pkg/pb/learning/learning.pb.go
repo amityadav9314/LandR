@@ -151,6 +151,162 @@ func (x *AddMaterialResponse) GetTags() []string {
 	return nil
 }
 
+type MaterialSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	DueCount      int32                  `protobuf:"varint,3,opt,name=due_count,json=dueCount,proto3" json:"due_count,omitempty"`
+	Tags          []string               `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MaterialSummary) Reset() {
+	*x = MaterialSummary{}
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MaterialSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MaterialSummary) ProtoMessage() {}
+
+func (x *MaterialSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MaterialSummary.ProtoReflect.Descriptor instead.
+func (*MaterialSummary) Descriptor() ([]byte, []int) {
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MaterialSummary) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *MaterialSummary) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *MaterialSummary) GetDueCount() int32 {
+	if x != nil {
+		return x.DueCount
+	}
+	return 0
+}
+
+func (x *MaterialSummary) GetTags() []string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+type GetDueMaterialsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Materials     []*MaterialSummary     `protobuf:"bytes,1,rep,name=materials,proto3" json:"materials,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDueMaterialsResponse) Reset() {
+	*x = GetDueMaterialsResponse{}
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDueMaterialsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDueMaterialsResponse) ProtoMessage() {}
+
+func (x *GetDueMaterialsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDueMaterialsResponse.ProtoReflect.Descriptor instead.
+func (*GetDueMaterialsResponse) Descriptor() ([]byte, []int) {
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetDueMaterialsResponse) GetMaterials() []*MaterialSummary {
+	if x != nil {
+		return x.Materials
+	}
+	return nil
+}
+
+type GetDueFlashcardsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MaterialId    string                 `protobuf:"bytes,1,opt,name=material_id,json=materialId,proto3" json:"material_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDueFlashcardsRequest) Reset() {
+	*x = GetDueFlashcardsRequest{}
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDueFlashcardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDueFlashcardsRequest) ProtoMessage() {}
+
+func (x *GetDueFlashcardsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDueFlashcardsRequest.ProtoReflect.Descriptor instead.
+func (*GetDueFlashcardsRequest) Descriptor() ([]byte, []int) {
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetDueFlashcardsRequest) GetMaterialId() string {
+	if x != nil {
+		return x.MaterialId
+	}
+	return ""
+}
+
 type Flashcard struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -166,7 +322,7 @@ type Flashcard struct {
 
 func (x *Flashcard) Reset() {
 	*x = Flashcard{}
-	mi := &file_backend_proto_learning_learning_proto_msgTypes[2]
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -178,7 +334,7 @@ func (x *Flashcard) String() string {
 func (*Flashcard) ProtoMessage() {}
 
 func (x *Flashcard) ProtoReflect() protoreflect.Message {
-	mi := &file_backend_proto_learning_learning_proto_msgTypes[2]
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -191,7 +347,7 @@ func (x *Flashcard) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Flashcard.ProtoReflect.Descriptor instead.
 func (*Flashcard) Descriptor() ([]byte, []int) {
-	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{2}
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Flashcard) GetId() string {
@@ -252,7 +408,7 @@ type FlashcardList struct {
 
 func (x *FlashcardList) Reset() {
 	*x = FlashcardList{}
-	mi := &file_backend_proto_learning_learning_proto_msgTypes[3]
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -264,7 +420,7 @@ func (x *FlashcardList) String() string {
 func (*FlashcardList) ProtoMessage() {}
 
 func (x *FlashcardList) ProtoReflect() protoreflect.Message {
-	mi := &file_backend_proto_learning_learning_proto_msgTypes[3]
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -277,7 +433,7 @@ func (x *FlashcardList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FlashcardList.ProtoReflect.Descriptor instead.
 func (*FlashcardList) Descriptor() ([]byte, []int) {
-	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{3}
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *FlashcardList) GetFlashcards() []*Flashcard {
@@ -296,7 +452,7 @@ type CompleteReviewRequest struct {
 
 func (x *CompleteReviewRequest) Reset() {
 	*x = CompleteReviewRequest{}
-	mi := &file_backend_proto_learning_learning_proto_msgTypes[4]
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -308,7 +464,7 @@ func (x *CompleteReviewRequest) String() string {
 func (*CompleteReviewRequest) ProtoMessage() {}
 
 func (x *CompleteReviewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_backend_proto_learning_learning_proto_msgTypes[4]
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -321,7 +477,7 @@ func (x *CompleteReviewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteReviewRequest.ProtoReflect.Descriptor instead.
 func (*CompleteReviewRequest) Descriptor() ([]byte, []int) {
-	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{4}
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CompleteReviewRequest) GetFlashcardId() string {
@@ -345,7 +501,17 @@ const file_backend_proto_learning_learning_proto_rawDesc = "" +
 	"materialId\x12-\n" +
 	"\x12flashcards_created\x18\x02 \x01(\x05R\x11flashcardsCreated\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12\x12\n" +
-	"\x04tags\x18\x04 \x03(\tR\x04tags\"\xe2\x01\n" +
+	"\x04tags\x18\x04 \x03(\tR\x04tags\"h\n" +
+	"\x0fMaterialSummary\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1b\n" +
+	"\tdue_count\x18\x03 \x01(\x05R\bdueCount\x12\x12\n" +
+	"\x04tags\x18\x04 \x03(\tR\x04tags\"R\n" +
+	"\x17GetDueMaterialsResponse\x127\n" +
+	"\tmaterials\x18\x01 \x03(\v2\x19.learning.MaterialSummaryR\tmaterials\":\n" +
+	"\x17GetDueFlashcardsRequest\x12\x1f\n" +
+	"\vmaterial_id\x18\x01 \x01(\tR\n" +
+	"materialId\"\xe2\x01\n" +
 	"\tFlashcard\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bquestion\x18\x02 \x01(\tR\bquestion\x12\x16\n" +
@@ -359,10 +525,11 @@ const file_backend_proto_learning_learning_proto_rawDesc = "" +
 	"flashcards\x18\x01 \x03(\v2\x13.learning.FlashcardR\n" +
 	"flashcards\":\n" +
 	"\x15CompleteReviewRequest\x12!\n" +
-	"\fflashcard_id\x18\x01 \x01(\tR\vflashcardId2\xed\x01\n" +
+	"\fflashcard_id\x18\x01 \x01(\tR\vflashcardId2\xc6\x02\n" +
 	"\x0fLearningService\x12J\n" +
-	"\vAddMaterial\x12\x1c.learning.AddMaterialRequest\x1a\x1d.learning.AddMaterialResponse\x12C\n" +
-	"\x10GetDueFlashcards\x12\x16.google.protobuf.Empty\x1a\x17.learning.FlashcardList\x12I\n" +
+	"\vAddMaterial\x12\x1c.learning.AddMaterialRequest\x1a\x1d.learning.AddMaterialResponse\x12L\n" +
+	"\x0fGetDueMaterials\x12\x16.google.protobuf.Empty\x1a!.learning.GetDueMaterialsResponse\x12N\n" +
+	"\x10GetDueFlashcards\x12!.learning.GetDueFlashcardsRequest\x1a\x17.learning.FlashcardList\x12I\n" +
 	"\x0eCompleteReview\x12\x1f.learning.CompleteReviewRequest\x1a\x16.google.protobuf.EmptyB,Z*github.com/amityadav/landr/pkg/pb/learningb\x06proto3"
 
 var (
@@ -377,30 +544,36 @@ func file_backend_proto_learning_learning_proto_rawDescGZIP() []byte {
 	return file_backend_proto_learning_learning_proto_rawDescData
 }
 
-var file_backend_proto_learning_learning_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_backend_proto_learning_learning_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_backend_proto_learning_learning_proto_goTypes = []any{
-	(*AddMaterialRequest)(nil),    // 0: learning.AddMaterialRequest
-	(*AddMaterialResponse)(nil),   // 1: learning.AddMaterialResponse
-	(*Flashcard)(nil),             // 2: learning.Flashcard
-	(*FlashcardList)(nil),         // 3: learning.FlashcardList
-	(*CompleteReviewRequest)(nil), // 4: learning.CompleteReviewRequest
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 6: google.protobuf.Empty
+	(*AddMaterialRequest)(nil),      // 0: learning.AddMaterialRequest
+	(*AddMaterialResponse)(nil),     // 1: learning.AddMaterialResponse
+	(*MaterialSummary)(nil),         // 2: learning.MaterialSummary
+	(*GetDueMaterialsResponse)(nil), // 3: learning.GetDueMaterialsResponse
+	(*GetDueFlashcardsRequest)(nil), // 4: learning.GetDueFlashcardsRequest
+	(*Flashcard)(nil),               // 5: learning.Flashcard
+	(*FlashcardList)(nil),           // 6: learning.FlashcardList
+	(*CompleteReviewRequest)(nil),   // 7: learning.CompleteReviewRequest
+	(*timestamppb.Timestamp)(nil),   // 8: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),           // 9: google.protobuf.Empty
 }
 var file_backend_proto_learning_learning_proto_depIdxs = []int32{
-	5, // 0: learning.Flashcard.next_review_at:type_name -> google.protobuf.Timestamp
-	2, // 1: learning.FlashcardList.flashcards:type_name -> learning.Flashcard
-	0, // 2: learning.LearningService.AddMaterial:input_type -> learning.AddMaterialRequest
-	6, // 3: learning.LearningService.GetDueFlashcards:input_type -> google.protobuf.Empty
-	4, // 4: learning.LearningService.CompleteReview:input_type -> learning.CompleteReviewRequest
-	1, // 5: learning.LearningService.AddMaterial:output_type -> learning.AddMaterialResponse
-	3, // 6: learning.LearningService.GetDueFlashcards:output_type -> learning.FlashcardList
-	6, // 7: learning.LearningService.CompleteReview:output_type -> google.protobuf.Empty
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 0: learning.GetDueMaterialsResponse.materials:type_name -> learning.MaterialSummary
+	8, // 1: learning.Flashcard.next_review_at:type_name -> google.protobuf.Timestamp
+	5, // 2: learning.FlashcardList.flashcards:type_name -> learning.Flashcard
+	0, // 3: learning.LearningService.AddMaterial:input_type -> learning.AddMaterialRequest
+	9, // 4: learning.LearningService.GetDueMaterials:input_type -> google.protobuf.Empty
+	4, // 5: learning.LearningService.GetDueFlashcards:input_type -> learning.GetDueFlashcardsRequest
+	7, // 6: learning.LearningService.CompleteReview:input_type -> learning.CompleteReviewRequest
+	1, // 7: learning.LearningService.AddMaterial:output_type -> learning.AddMaterialResponse
+	3, // 8: learning.LearningService.GetDueMaterials:output_type -> learning.GetDueMaterialsResponse
+	6, // 9: learning.LearningService.GetDueFlashcards:output_type -> learning.FlashcardList
+	9, // 10: learning.LearningService.CompleteReview:output_type -> google.protobuf.Empty
+	7, // [7:11] is the sub-list for method output_type
+	3, // [3:7] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_backend_proto_learning_learning_proto_init() }
@@ -414,7 +587,7 @@ func file_backend_proto_learning_learning_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_backend_proto_learning_learning_proto_rawDesc), len(file_backend_proto_learning_learning_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

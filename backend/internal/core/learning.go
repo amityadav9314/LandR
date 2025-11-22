@@ -103,15 +103,26 @@ func (c *LearningCore) AddMaterial(ctx context.Context, userID, matType, content
 	return materialID, int32(len(cards)), title, tags, nil
 }
 
-func (c *LearningCore) GetDueFlashcards(ctx context.Context, userID string) ([]*learning.Flashcard, error) {
-	log.Printf("[Core.GetDueFlashcards] Querying for userID: %s", userID)
-	cards, err := c.store.GetDueFlashcards(ctx, userID)
+func (c *LearningCore) GetDueFlashcards(ctx context.Context, userID, materialID string) ([]*learning.Flashcard, error) {
+	log.Printf("[Core.GetDueFlashcards] Querying for userID: %s, materialID: %s", userID, materialID)
+	cards, err := c.store.GetDueFlashcards(ctx, userID, materialID)
 	if err != nil {
 		log.Printf("[Core.GetDueFlashcards] Query failed: %v", err)
 		return nil, err
 	}
 	log.Printf("[Core.GetDueFlashcards] Found %d cards", len(cards))
 	return cards, nil
+}
+
+func (c *LearningCore) GetDueMaterials(ctx context.Context, userID string) ([]*learning.MaterialSummary, error) {
+	log.Printf("[Core.GetDueMaterials] Querying for userID: %s", userID)
+	materials, err := c.store.GetDueMaterials(ctx, userID)
+	if err != nil {
+		log.Printf("[Core.GetDueMaterials] Query failed: %v", err)
+		return nil, err
+	}
+	log.Printf("[Core.GetDueMaterials] Found %d materials", len(materials))
+	return materials, nil
 }
 
 func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) error {
