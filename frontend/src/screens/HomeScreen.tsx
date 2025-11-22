@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,6 +36,25 @@ export const HomeScreen = () => {
         },
     });
 
+    const groupedData = React.useMemo(() => {
+        if (!data) return [];
+
+        const groups: { [key: string]: Flashcard[] } = {};
+        data.forEach(card => {
+            const title = card.materialTitle || 'Untitled Material';
+            if (!groups[title]) {
+                groups[title] = [];
+            }
+            groups[title].push(card);
+        });
+
+        return Object.keys(groups).map(title => ({
+            title,
+            data: groups[title],
+            tags: groups[title][0]?.tags || [] // Assume all cards in material share tags for now, or take from first
+        }));
+    }, [data]);
+
     const renderItem = ({ item }: { item: Flashcard }) => (
         <TouchableOpacity
             style={styles.card}
@@ -44,6 +63,19 @@ export const HomeScreen = () => {
             <Text style={styles.question}>{item.question}</Text>
             <Text style={styles.stage}>Stage: {item.stage}</Text>
         </TouchableOpacity>
+    );
+
+    const renderSectionHeader = ({ section: { title, tags } }: { section: { title: string, tags: string[] } }) => (
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+            <View style={styles.tagsContainer}>
+                {tags.map((tag, index) => (
+                    <View key={index} style={styles.tagBadge}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                ))}
+            </View>
+        </View>
     );
 
     return (
@@ -55,14 +87,15 @@ export const HomeScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.sectionTitle}>Due for Review</Text>
+            <Text style={styles.mainTitle}>Due for Review</Text>
 
             {error ? (
                 <Text style={styles.error}>Failed to load flashcards</Text>
             ) : (
-                <FlatList
-                    data={data}
+                <SectionList
+                    sections={groupedData}
                     renderItem={renderItem}
+                    renderSectionHeader={renderSectionHeader}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.list}
                     refreshControl={
@@ -71,6 +104,7 @@ export const HomeScreen = () => {
                     ListEmptyComponent={
                         <Text style={styles.empty}>No flashcards due! Good job.</Text>
                     }
+                    stickySectionHeadersEnabled={false}
                 />
             )}
 
@@ -91,11 +125,6 @@ const styles = StyleSheet.create({
         paddingTop: 50,
         paddingHorizontal: 20,
     },
-    center: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -111,10 +140,35 @@ const styles = StyleSheet.create({
         color: '#d9534f',
         fontWeight: '600',
     },
+    mainTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        color: '#333',
+    },
+    sectionHeader: {
+        marginTop: 15,
+        marginBottom: 10,
+    },
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        marginBottom: 10,
+        color: '#555',
+        marginBottom: 5,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    tagBadge: {
+        backgroundColor: '#e0e0e0',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    tagText: {
+        fontSize: 12,
         color: '#555',
     },
     list: {

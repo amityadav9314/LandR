@@ -28,5 +28,5 @@ CREATE TABLE IF NOT EXISTS flashcards (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_flashcards_next_review ON flashcards(next_review_at);
-CREATE INDEX idx_materials_user_id ON materials(user_id);
+CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review_at);
+CREATE INDEX IF NOT EXISTS idx_materials_user_id ON materials(user_id);

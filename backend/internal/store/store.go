@@ -14,7 +14,13 @@ type Store interface {
 	GetUserByGoogleID(ctx context.Context, googleID string) (*auth.UserProfile, error)
 
 	// Material
-	CreateMaterial(ctx context.Context, userID, matType, content string) (string, error)
+	CreateMaterial(ctx context.Context, userID, matType, content, title string) (string, error)
+
+	// Tags
+	CreateTag(ctx context.Context, userID, name string) (string, error)
+	GetTags(ctx context.Context, userID string) ([]string, error)
+	AddMaterialTags(ctx context.Context, materialID string, tagIDs []string) error
+	GetMaterialTags(ctx context.Context, materialID string) ([]string, error)
 
 	// Flashcard
 	CreateFlashcards(ctx context.Context, materialID string, cards []*learning.Flashcard) error

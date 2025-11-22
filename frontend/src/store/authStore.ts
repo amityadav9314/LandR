@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 // Bypass authentication for testing
                 console.log('[BYPASS] No session found, auto-login with mock user');
                 const mockUser = {
-                    id: 'mock-user-id',
+                    id: '8bd27697-d4a9-405e-b0ca-e0ee78ef045b',
                     email: 'test@example.com',
                     name: 'Test User',
                     picture: '',

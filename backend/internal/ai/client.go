@@ -47,22 +47,36 @@ type choice struct {
 	Message message `json:"message"`
 }
 
-// GenerateFlashcards sends the content to Groq and expects a JSON array of flashcards.
-func (c *Client) GenerateFlashcards(content string) ([]*learning.Flashcard, error) {
+// GenerateFlashcards sends the content to Groq and expects a JSON object with title, tags, and flashcards.
+func (c *Client) GenerateFlashcards(content string, existingTags []string) (string, []string, []*learning.Flashcard, error) {
 	log.Printf("[AI] Starting flashcard generation, content length: %d", len(content))
 
-	prompt := `
+	prompt := fmt.Sprintf(`
 You are a helpful assistant that creates flashcards from text.
-Analyze the following text and create 5 to 10 high-quality flashcards (Question and Answer pairs).
-Return ONLY a raw JSON array of objects with "question" and "answer" fields. 
+Analyze the following text and create:
+1. A short, descriptive Title for the material.
+2. A list of 3-5 relevant Tags (categories).
+3. 5 to 10 high-quality flashcards (Question and Answer pairs).
+
+Existing tags you might reuse if relevant: %s
+
+Return ONLY a raw JSON object with the following structure:
+{
+  "title": "String",
+  "tags": ["String", "String"],
+  "flashcards": [
+    {"question": "String", "answer": "String"}
+  ]
+}
 Do not include any markdown formatting (like json code blocks).
 Do not include any other text.
 
 Text:
-` + content
+%s
+`, strings.Join(existingTags, ", "), content)
 
 	reqBody := chatRequest{
-		Model: "openai/gpt-oss-120b", // Current Groq model (as of Nov 2024)
+		Model: "openai/gpt-oss-120b", // Current Groq model
 		Messages: []message{
 			{Role: "user", Content: prompt},
 		},
@@ -73,13 +87,13 @@ Text:
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
 		log.Printf("[AI] Failed to marshal request: %v", err)
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", c.baseURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		log.Printf("[AI] Failed to create HTTP request: %v", err)
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -89,7 +103,7 @@ Text:
 	resp, err := c.client.Do(req)
 	if err != nil {
 		log.Printf("[AI] HTTP request failed: %v", err)
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -98,36 +112,41 @@ Text:
 	if resp.StatusCode != 200 {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		log.Printf("[AI] API error response: %s", string(bodyBytes))
-		return nil, fmt.Errorf("api error: %d %s", resp.StatusCode, string(bodyBytes))
+		return "", nil, nil, fmt.Errorf("api error: %d %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var chatResp chatResponse
 	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
 		log.Printf("[AI] Failed to decode response: %v", err)
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	if len(chatResp.Choices) == 0 {
 		log.Printf("[AI] No choices returned in response")
-		return nil, fmt.Errorf("no choices returned")
+		return "", nil, nil, fmt.Errorf("no choices returned")
 	}
 
 	rawContent := chatResp.Choices[0].Message.Content
 	log.Printf("[AI] Raw AI response length: %d", len(rawContent))
 
-	// Clean up potential markdown formatting if the model ignores instructions
+	// Clean up potential markdown formatting
 	rawContent = cleanJSON(rawContent)
 	log.Printf("[AI] Cleaned JSON length: %d", len(rawContent))
 
-	var cards []*learning.Flashcard
-	if err := json.Unmarshal([]byte(rawContent), &cards); err != nil {
-		log.Printf("[AI] Failed to parse flashcards JSON: %v", err)
-		log.Printf("[AI] Content was: %s", rawContent)
-		return nil, fmt.Errorf("failed to parse flashcards json: %w. Content: %s", err, rawContent)
+	var result struct {
+		Title      string                `json:"title"`
+		Tags       []string              `json:"tags"`
+		Flashcards []*learning.Flashcard `json:"flashcards"`
 	}
 
-	log.Printf("[AI] Successfully parsed %d flashcards", len(cards))
-	return cards, nil
+	if err := json.Unmarshal([]byte(rawContent), &result); err != nil {
+		log.Printf("[AI] Failed to parse JSON: %v", err)
+		log.Printf("[AI] Content was: %s", rawContent)
+		return "", nil, nil, fmt.Errorf("failed to parse json: %w. Content: %s", err, rawContent)
+	}
+
+	log.Printf("[AI] Successfully parsed: Title='%s', Tags=%d, Flashcards=%d", result.Title, len(result.Tags), len(result.Flashcards))
+	return result.Title, result.Tags, result.Flashcards, nil
 }
 
 func cleanJSON(s string) string {

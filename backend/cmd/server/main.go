@@ -74,9 +74,10 @@ func main() {
 	reflection.Register(s)
 
 	// 5. gRPC-Web Wrapper
-	wrappedServer := grpcweb.WrapServer(s, grpcweb.WithOriginFunc(func(origin string) bool {
-		return true // Allow all origins for dev
-	}))
+	wrappedServer := grpcweb.WrapServer(s,
+		grpcweb.WithOriginFunc(func(origin string) bool { return true }),
+		grpcweb.WithAllowedRequestHeaders([]string{"*"}),
+	)
 
 	log.Printf("Server listening on :50051")
 	// Run gRPC-Web on separate port

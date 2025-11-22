@@ -32,7 +32,7 @@ func (s *LearningService) AddMaterial(ctx context.Context, req *learning.AddMate
 	userID := "8bd27697-d4a9-405e-b0ca-e0ee78ef045b" // Test user UUID
 	log.Printf("[AddMaterial] Using userID: %s", userID)
 
-	materialID, count, err := s.core.AddMaterial(ctx, userID, req.Type, req.Content)
+	materialID, count, title, tags, err := s.core.AddMaterial(ctx, userID, req.Type, req.Content, req.ExistingTags)
 	if err != nil {
 		log.Printf("[AddMaterial] ERROR: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to add material: %v", err)
@@ -42,6 +42,8 @@ func (s *LearningService) AddMaterial(ctx context.Context, req *learning.AddMate
 	return &learning.AddMaterialResponse{
 		MaterialId:        materialID,
 		FlashcardsCreated: count,
+		Title:             title,
+		Tags:              tags,
 	}, nil
 }
 

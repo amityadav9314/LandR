@@ -1,47 +1,71 @@
-.PHONY: help start-backend start-frontend start stop clean
+.PHONY: help build build-backend build-frontend start start-backend start-frontend stop clean clean-backend clean-frontend
+
+# Variables
+BACKEND_DIR := backend
+FRONTEND_DIR := frontend
+APP_NAME := server.exe
 
 # Default target
 help:
 	@echo "Learn and Revise - Development Commands"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make start          - Start both backend and frontend servers"
-	@echo "  make start-backend  - Start only the backend server"
-	@echo "  make start-frontend - Start only the frontend server"
+	@echo "  make build          - Build backend and install frontend dependencies"
+	@echo "  make start          - Start both backend and frontend servers in new windows"
 	@echo "  make stop           - Stop all running servers"
 	@echo "  make clean          - Clean build artifacts"
 	@echo ""
 
-# Start both servers (run in separate terminals)
+# Build
+build: build-backend build-frontend
+
+build-backend:
+	@echo "Building backend..."
+	cd $(BACKEND_DIR) && go build -o bin/$(APP_NAME) cmd/server/main.go
+
+build-frontend:
+	@echo "Installing frontend dependencies..."
+	cd $(FRONTEND_DIR) && npm install
+
+# Start
 start:
-	@echo "Starting backend and frontend servers..."
-	@echo "Backend will run on :50051 (gRPC) and :8080 (gRPC-Web)"
-	@echo "Frontend will run on :8081 (Metro Bundler)"
-	@echo ""
-	@echo "Run these commands in separate terminals:"
-	@echo "  Terminal 1: make start-backend"
-	@echo "  Terminal 2: make start-frontend"
+	@echo "Starting servers in separate windows..."
+	start "LandR Backend" cmd /c "cd $(BACKEND_DIR) && go run cmd/server/main.go"
+	start "LandR Frontend" cmd /c "cd $(FRONTEND_DIR) && npm start"
 
-# Start backend server
 start-backend:
-	@echo "Starting backend server..."
-	@echo "Note: Configure backend/.env file with your API keys"
-	@echo ""
-	cd backend && go run cmd/server/main.go
+	@echo "Starting backend..."
+	cd $(BACKEND_DIR) && go run cmd/server/main.go
 
-# Start frontend server
 start-frontend:
-	@echo "Starting frontend Expo server..."
-	cd frontend && cmd /c npm start
+	@echo "Starting frontend..."
+	cd $(FRONTEND_DIR) && npm start
 
-# Stop servers (Windows)
+# Stop
 stop:
-	@echo "Stopping servers on ports 8080, 8081, and 50051..."
-	@for /f "tokens=5" %a in ('netstat -ano ^| findstr ":8080 :8081 :50051"') do @taskkill /F /PID %a 2>nul || echo No process found
+	@echo "Stopping servers..."
+	@taskkill /F /IM $(APP_NAME) 2>nul || echo Backend not running
+	@taskkill /F /IM node.exe 2>nul || echo Node processes not running (Warning: This might kill other Node processes)
+	@echo "Note: You might need to manually close the opened terminal windows."
 
-# Clean build artifacts
-clean:
-	@echo "Cleaning build artifacts..."
-	cd backend && del /Q bin\* 2>nul || echo No backend artifacts to clean
-	cd frontend && rmdir /S /Q node_modules\.cache 2>nul || echo No frontend cache to clean
-	@echo "Clean complete!"
+# Clean
+clean: clean-backend clean-frontend
+
+clean-backend:
+	@echo "Cleaning backend..."
+	cd $(BACKEND_DIR) && del /Q bin\$(APP_NAME) 2>nul || echo No backend artifacts
+
+clean-frontend:
+	@echo "Cleaning frontend..."
+	cd $(FRONTEND_DIR) && rmdir /S /Q node_modules 2>nul || echo No frontend modules
+
+# Proto
+# Proto
+	protoc --go_out=backend --go_opt=module=github.com/amityadav/landr \
+	--go-grpc_out=backend --go-grpc_opt=module=github.com/amityadav/landr \
+	backend/proto/auth/*.proto backend/proto/learning/*.proto
+
+# Database
+migrate-up:
+	migrate -path backend/db/migrations -database "postgres://amityadav9314:amit8780@localhost:5432/inkgrid?sslmode=disable" up
+

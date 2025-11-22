@@ -29,10 +29,7 @@ const clientFactory = createClientFactory().use(async function* (call, options) 
     }
 
     try {
-        const generator = call.next(call.request, { ...options, metadata });
-        for await (const response of generator) {
-            yield response;
-        }
+        return yield* call.next(call.request, { ...options, metadata });
     } catch (error) {
         if (error instanceof ClientError && error.code === Status.UNAUTHENTICATED) {
             // Handle unauthenticated error (e.g., logout user)
