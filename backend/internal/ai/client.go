@@ -52,28 +52,28 @@ func (c *Client) GenerateFlashcards(content string, existingTags []string) (stri
 	log.Printf("[AI] Starting flashcard generation, content length: %d", len(content))
 
 	prompt := fmt.Sprintf(`
-You are a helpful assistant that creates flashcards from text.
-Analyze the following text and create:
-1. A short, descriptive Title for the material.
-2. A list of 3-5 relevant Tags (categories).
-3. 5 to 10 high-quality flashcards (Question and Answer pairs).
+		You are a helpful assistant that creates flashcards from text.
+		Analyze the following text and create:
+		1. A short, descriptive Title for the material.
+		2. A list of 3-5 relevant Tags (categories).
+		3. 5 to 10 high-quality flashcards (Question and Answer pairs).
 
-Existing tags you might reuse if relevant: %s
+		Existing tags you might reuse if relevant: %s
 
-Return ONLY a raw JSON object with the following structure:
-{
-  "title": "String",
-  "tags": ["String", "String"],
-  "flashcards": [
-    {"question": "String", "answer": "String"}
-  ]
-}
-Do not include any markdown formatting (like json code blocks).
-Do not include any other text.
+		Return ONLY a raw JSON object with the following structure:
+		{
+		  "title": "String",
+		  "tags": ["String", "String"],
+		  "flashcards": [
+			{"question": "String", "answer": "String"}
+		  ]
+		}
+		Do not include any markdown formatting (like json code blocks).
+		Do not include any other text.
 
-Text:
-%s
-`, strings.Join(existingTags, ", "), content)
+		Text:
+		%s
+		`, strings.Join(existingTags, ", "), content)
 
 	reqBody := chatRequest{
 		Model: "openai/gpt-oss-120b", // Current Groq model

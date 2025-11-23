@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="inkgrid@localhost" uuid="ff17d1d1-fc53-4644-9096-25121e0996a5">
+    <data-source source="LOCAL" name="inkgrid@localhost" uuid="2e3ac3b1-829d-4b6f-8f04-db2432bb1225">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

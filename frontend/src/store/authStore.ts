@@ -70,9 +70,10 @@ export const useAuthStore = create<AuthState>((set) => ({
                 // Bypass authentication for testing
                 console.log('[BYPASS] No session found, auto-login with mock user');
                 const mockUser = {
-                    id: '8bd27697-d4a9-405e-b0ca-e0ee78ef045b',
-                    email: 'test@example.com',
-                    name: 'Test User',
+                    //id: '6abbacea-af8d-4005-a49e-465355240598',
+                    id: '6abbacea-af8d-4005-a49e-465355240598',
+                    email: 'aky001@zohomail.in',
+                    name: 'Amit K Yadav',
                     picture: '',
                 };
                 const mockToken = 'mock-jwt-token';

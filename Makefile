@@ -64,9 +64,9 @@ proto:
 	protoc --go_out=backend --go_opt=module=github.com/amityadav/landr \
 	--go-grpc_out=backend --go-grpc_opt=module=github.com/amityadav/landr \
 	backend/proto/auth/*.proto backend/proto/learning/*.proto
-	protoc --go_out=backend --go_opt=module=github.com/amityadav/landr \
-	--go-grpc_out=backend --go-grpc_opt=module=github.com/amityadav/landr \
-	backend/proto/auth/*.proto backend/proto/learning/*.proto
+	#protoc --go_out=backend --go_opt=module=github.com/amityadav/landr \
+#	--go-grpc_out=backend --go-grpc_opt=module=github.com/amityadav/landr \
+#	backend/proto/auth/*.proto backend/proto/learning/*.proto
 
 # Database
 migrate-up:
