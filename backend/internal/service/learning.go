@@ -102,3 +102,25 @@ func (s *LearningService) CompleteReview(ctx context.Context, req *learning.Comp
 	log.Printf("[CompleteReview] SUCCESS")
 	return &emptypb.Empty{}, nil
 }
+
+func (s *LearningService) GetAllTags(ctx context.Context, _ *emptypb.Empty) (*learning.GetAllTagsResponse, error) {
+	// Extract user ID from context (set by auth interceptor)
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		log.Printf("[GetAllTags] ERROR: Failed to get user ID: %v", err)
+		return nil, err
+	}
+	
+	log.Printf("[GetAllTags] Fetching all tags for userID: %s", userID)
+
+	tags, err := s.core.GetAllTags(ctx, userID)
+	if err != nil {
+		log.Printf("[GetAllTags] ERROR: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get tags: %v", err)
+	}
+
+	log.Printf("[GetAllTags] SUCCESS - Found %d unique tags", len(tags))
+	return &learning.GetAllTagsResponse{
+		Tags: tags,
+	}, nil
+}

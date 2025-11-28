@@ -154,3 +154,7 @@ func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) e
 	log.Printf("[Core.CompleteReview] Updated successfully")
 	return nil
 }
+
+func (c *LearningCore) GetAllTags(ctx context.Context, userID string) ([]string, error) {
+	return c.store.GetTags(ctx, userID)
+}

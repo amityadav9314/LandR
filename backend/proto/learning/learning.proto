@@ -12,6 +12,7 @@ service LearningService {
   rpc GetDueMaterials(google.protobuf.Empty) returns (GetDueMaterialsResponse);
   rpc GetDueFlashcards(GetDueFlashcardsRequest) returns (FlashcardList);
   rpc CompleteReview(CompleteReviewRequest) returns (google.protobuf.Empty);
+  rpc GetAllTags(google.protobuf.Empty) returns (GetAllTagsResponse);
 }
 
 message AddMaterialRequest {
@@ -58,4 +59,8 @@ message FlashcardList {
 
 message CompleteReviewRequest {
   string flashcard_id = 1;
+}
+
+message GetAllTagsResponse {
+  repeated string tags = 1;
 }

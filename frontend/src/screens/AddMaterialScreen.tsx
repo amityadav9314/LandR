@@ -18,8 +18,17 @@ export const AddMaterialScreen = () => {
             });
         },
         onSuccess: (data) => {
-            Alert.alert('Success', `Created ${data.flashcardsCreated} flashcards!`);
+            console.log('[ADD_MATERIAL] Success! Created flashcards:', data.flashcardsCreated);
+            console.log('[ADD_MATERIAL] Material title:', data.title);
+            console.log('[ADD_MATERIAL] Tags:', data.tags);
+            
+            Alert.alert('Success', `Created ${data.flashcardsCreated} flashcards for "${data.title}"!`);
+            
+            // Invalidate all queries to refresh the UI
+            queryClient.invalidateQueries({ queryKey: ['dueMaterials'] });
             queryClient.invalidateQueries({ queryKey: ['dueFlashcards'] });
+            queryClient.invalidateQueries({ queryKey: ['allTags'] }); // Refresh tags list
+            
             navigation.goBack();
         },
         onError: (error) => {

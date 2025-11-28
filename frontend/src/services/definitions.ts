@@ -1,6 +1,6 @@
-import { AuthServiceImplementation, LoginRequest, LoginResponse } from '../../proto/auth';
-import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest } from '../../proto/backend/proto/learning/learning';
-import { Empty } from '../../google/protobuf/empty';
+import { AuthServiceImplementation, LoginRequest, LoginResponse } from '../../proto/backend/proto/auth/auth';
+import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest, GetAllTagsResponse } from '../../proto/backend/proto/learning/learning';
+import { Empty } from '../../proto/backend/google/protobuf/empty';
 
 export const AuthServiceDefinition = {
     name: 'AuthService',
@@ -50,6 +50,14 @@ export const LearningServiceDefinition = {
             requestType: CompleteReviewRequest,
             requestStream: false,
             responseType: Empty,
+            responseStream: false,
+            options: {},
+        },
+        getAllTags: {
+            name: 'GetAllTags',
+            requestType: Empty,
+            requestStream: false,
+            responseType: GetAllTagsResponse,
             responseStream: false,
             options: {},
         },

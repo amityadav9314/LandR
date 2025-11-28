@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
-import { UserProfile } from '../../proto/auth';
+import { UserProfile } from '../../proto/backend/proto/auth/auth';
 
 interface AuthState {
     user: UserProfile | null;
