@@ -19,7 +19,19 @@ export const LoginScreen = () => {
         iosClientId: GOOGLE_IOS_CLIENT_ID,
         androidClientId: GOOGLE_ANDROID_CLIENT_ID,
         responseType: ResponseType.IdToken,
+        redirectUri: typeof window !== 'undefined' ? window.location.origin : undefined,
     });
+
+    // Debug: Log the redirect URI being used
+    useEffect(() => {
+        if (request) {
+            console.log('[LOGIN] OAuth Request Config:', {
+                clientId: request.clientId,
+                redirectUri: request.redirectUri,
+                responseType: request.responseType,
+            });
+        }
+    }, [request]);
 
     useEffect(() => {
         if (response?.type === 'success') {
