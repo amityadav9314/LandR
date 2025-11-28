@@ -13,6 +13,7 @@ service LearningService {
   rpc GetDueFlashcards(GetDueFlashcardsRequest) returns (FlashcardList);
   rpc CompleteReview(CompleteReviewRequest) returns (google.protobuf.Empty);
   rpc GetAllTags(google.protobuf.Empty) returns (GetAllTagsResponse);
+  rpc GetNotificationStatus(google.protobuf.Empty) returns (NotificationStatusResponse);
 }
 
 message AddMaterialRequest {
@@ -72,4 +73,9 @@ message CompleteReviewRequest {
 
 message GetAllTagsResponse {
   repeated string tags = 1;
+}
+
+message NotificationStatusResponse {
+  int32 due_flashcards_count = 1;
+  bool has_due_materials = 2;
 }

@@ -1,5 +1,5 @@
 import { AuthServiceImplementation, LoginRequest, LoginResponse } from '../../proto/backend/proto/auth/auth';
-import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest, GetAllTagsResponse } from '../../proto/backend/proto/learning/learning';
+import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest, GetAllTagsResponse, NotificationStatusResponse } from '../../proto/backend/proto/learning/learning';
 import { Empty } from '../../proto/backend/google/protobuf/empty';
 
 export const AuthServiceDefinition = {
@@ -58,6 +58,14 @@ export const LearningServiceDefinition = {
             requestType: Empty,
             requestStream: false,
             responseType: GetAllTagsResponse,
+            responseStream: false,
+            options: {},
+        },
+        getNotificationStatus: {
+            name: 'GetNotificationStatus',
+            requestType: Empty,
+            requestStream: false,
+            responseType: NotificationStatusResponse,
             responseStream: false,
             options: {},
         },

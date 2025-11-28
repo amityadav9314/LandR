@@ -183,3 +183,17 @@ func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) e
 func (c *LearningCore) GetAllTags(ctx context.Context, userID string) ([]string, error) {
 	return c.store.GetTags(ctx, userID)
 }
+
+func (c *LearningCore) GetNotificationStatus(ctx context.Context, userID string) (int32, bool, error) {
+	log.Printf("[Core.GetNotificationStatus] Getting notification status for userID: %s", userID)
+	
+	count, err := c.store.GetDueFlashcardsCount(ctx, userID)
+	if err != nil {
+		log.Printf("[Core.GetNotificationStatus] Failed to get count: %v", err)
+		return 0, false, err
+	}
+	
+	hasDue := count > 0
+	log.Printf("[Core.GetNotificationStatus] User has %d due flashcards", count)
+	return count, hasDue, nil
+}

@@ -615,6 +615,58 @@ func (x *GetAllTagsResponse) GetTags() []string {
 	return nil
 }
 
+type NotificationStatusResponse struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	DueFlashcardsCount int32                  `protobuf:"varint,1,opt,name=due_flashcards_count,json=dueFlashcardsCount,proto3" json:"due_flashcards_count,omitempty"`
+	HasDueMaterials    bool                   `protobuf:"varint,2,opt,name=has_due_materials,json=hasDueMaterials,proto3" json:"has_due_materials,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *NotificationStatusResponse) Reset() {
+	*x = NotificationStatusResponse{}
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationStatusResponse) ProtoMessage() {}
+
+func (x *NotificationStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_backend_proto_learning_learning_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationStatusResponse.ProtoReflect.Descriptor instead.
+func (*NotificationStatusResponse) Descriptor() ([]byte, []int) {
+	return file_backend_proto_learning_learning_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *NotificationStatusResponse) GetDueFlashcardsCount() int32 {
+	if x != nil {
+		return x.DueFlashcardsCount
+	}
+	return 0
+}
+
+func (x *NotificationStatusResponse) GetHasDueMaterials() bool {
+	if x != nil {
+		return x.HasDueMaterials
+	}
+	return false
+}
+
 var File_backend_proto_learning_learning_proto protoreflect.FileDescriptor
 
 const file_backend_proto_learning_learning_proto_rawDesc = "" +
@@ -664,14 +716,18 @@ const file_backend_proto_learning_learning_proto_rawDesc = "" +
 	"\x15CompleteReviewRequest\x12!\n" +
 	"\fflashcard_id\x18\x01 \x01(\tR\vflashcardId\"(\n" +
 	"\x12GetAllTagsResponse\x12\x12\n" +
-	"\x04tags\x18\x01 \x03(\tR\x04tags2\x94\x03\n" +
+	"\x04tags\x18\x01 \x03(\tR\x04tags\"z\n" +
+	"\x1aNotificationStatusResponse\x120\n" +
+	"\x14due_flashcards_count\x18\x01 \x01(\x05R\x12dueFlashcardsCount\x12*\n" +
+	"\x11has_due_materials\x18\x02 \x01(\bR\x0fhasDueMaterials2\xeb\x03\n" +
 	"\x0fLearningService\x12J\n" +
 	"\vAddMaterial\x12\x1c.learning.AddMaterialRequest\x1a\x1d.learning.AddMaterialResponse\x12V\n" +
 	"\x0fGetDueMaterials\x12 .learning.GetDueMaterialsRequest\x1a!.learning.GetDueMaterialsResponse\x12N\n" +
 	"\x10GetDueFlashcards\x12!.learning.GetDueFlashcardsRequest\x1a\x17.learning.FlashcardList\x12I\n" +
 	"\x0eCompleteReview\x12\x1f.learning.CompleteReviewRequest\x1a\x16.google.protobuf.Empty\x12B\n" +
 	"\n" +
-	"GetAllTags\x12\x16.google.protobuf.Empty\x1a\x1c.learning.GetAllTagsResponseB,Z*github.com/amityadav/landr/pkg/pb/learningb\x06proto3"
+	"GetAllTags\x12\x16.google.protobuf.Empty\x1a\x1c.learning.GetAllTagsResponse\x12U\n" +
+	"\x15GetNotificationStatus\x12\x16.google.protobuf.Empty\x1a$.learning.NotificationStatusResponseB,Z*github.com/amityadav/landr/pkg/pb/learningb\x06proto3"
 
 var (
 	file_backend_proto_learning_learning_proto_rawDescOnce sync.Once
@@ -685,37 +741,40 @@ func file_backend_proto_learning_learning_proto_rawDescGZIP() []byte {
 	return file_backend_proto_learning_learning_proto_rawDescData
 }
 
-var file_backend_proto_learning_learning_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_backend_proto_learning_learning_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_backend_proto_learning_learning_proto_goTypes = []any{
-	(*AddMaterialRequest)(nil),      // 0: learning.AddMaterialRequest
-	(*AddMaterialResponse)(nil),     // 1: learning.AddMaterialResponse
-	(*MaterialSummary)(nil),         // 2: learning.MaterialSummary
-	(*GetDueMaterialsRequest)(nil),  // 3: learning.GetDueMaterialsRequest
-	(*GetDueMaterialsResponse)(nil), // 4: learning.GetDueMaterialsResponse
-	(*GetDueFlashcardsRequest)(nil), // 5: learning.GetDueFlashcardsRequest
-	(*Flashcard)(nil),               // 6: learning.Flashcard
-	(*FlashcardList)(nil),           // 7: learning.FlashcardList
-	(*CompleteReviewRequest)(nil),   // 8: learning.CompleteReviewRequest
-	(*GetAllTagsResponse)(nil),      // 9: learning.GetAllTagsResponse
-	(*timestamppb.Timestamp)(nil),   // 10: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),           // 11: google.protobuf.Empty
+	(*AddMaterialRequest)(nil),         // 0: learning.AddMaterialRequest
+	(*AddMaterialResponse)(nil),        // 1: learning.AddMaterialResponse
+	(*MaterialSummary)(nil),            // 2: learning.MaterialSummary
+	(*GetDueMaterialsRequest)(nil),     // 3: learning.GetDueMaterialsRequest
+	(*GetDueMaterialsResponse)(nil),    // 4: learning.GetDueMaterialsResponse
+	(*GetDueFlashcardsRequest)(nil),    // 5: learning.GetDueFlashcardsRequest
+	(*Flashcard)(nil),                  // 6: learning.Flashcard
+	(*FlashcardList)(nil),              // 7: learning.FlashcardList
+	(*CompleteReviewRequest)(nil),      // 8: learning.CompleteReviewRequest
+	(*GetAllTagsResponse)(nil),         // 9: learning.GetAllTagsResponse
+	(*NotificationStatusResponse)(nil), // 10: learning.NotificationStatusResponse
+	(*timestamppb.Timestamp)(nil),      // 11: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),              // 12: google.protobuf.Empty
 }
 var file_backend_proto_learning_learning_proto_depIdxs = []int32{
 	2,  // 0: learning.GetDueMaterialsResponse.materials:type_name -> learning.MaterialSummary
-	10, // 1: learning.Flashcard.next_review_at:type_name -> google.protobuf.Timestamp
+	11, // 1: learning.Flashcard.next_review_at:type_name -> google.protobuf.Timestamp
 	6,  // 2: learning.FlashcardList.flashcards:type_name -> learning.Flashcard
 	0,  // 3: learning.LearningService.AddMaterial:input_type -> learning.AddMaterialRequest
 	3,  // 4: learning.LearningService.GetDueMaterials:input_type -> learning.GetDueMaterialsRequest
 	5,  // 5: learning.LearningService.GetDueFlashcards:input_type -> learning.GetDueFlashcardsRequest
 	8,  // 6: learning.LearningService.CompleteReview:input_type -> learning.CompleteReviewRequest
-	11, // 7: learning.LearningService.GetAllTags:input_type -> google.protobuf.Empty
-	1,  // 8: learning.LearningService.AddMaterial:output_type -> learning.AddMaterialResponse
-	4,  // 9: learning.LearningService.GetDueMaterials:output_type -> learning.GetDueMaterialsResponse
-	7,  // 10: learning.LearningService.GetDueFlashcards:output_type -> learning.FlashcardList
-	11, // 11: learning.LearningService.CompleteReview:output_type -> google.protobuf.Empty
-	9,  // 12: learning.LearningService.GetAllTags:output_type -> learning.GetAllTagsResponse
-	8,  // [8:13] is the sub-list for method output_type
-	3,  // [3:8] is the sub-list for method input_type
+	12, // 7: learning.LearningService.GetAllTags:input_type -> google.protobuf.Empty
+	12, // 8: learning.LearningService.GetNotificationStatus:input_type -> google.protobuf.Empty
+	1,  // 9: learning.LearningService.AddMaterial:output_type -> learning.AddMaterialResponse
+	4,  // 10: learning.LearningService.GetDueMaterials:output_type -> learning.GetDueMaterialsResponse
+	7,  // 11: learning.LearningService.GetDueFlashcards:output_type -> learning.FlashcardList
+	12, // 12: learning.LearningService.CompleteReview:output_type -> google.protobuf.Empty
+	9,  // 13: learning.LearningService.GetAllTags:output_type -> learning.GetAllTagsResponse
+	10, // 14: learning.LearningService.GetNotificationStatus:output_type -> learning.NotificationStatusResponse
+	9,  // [9:15] is the sub-list for method output_type
+	3,  // [3:9] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -732,7 +791,7 @@ func file_backend_proto_learning_learning_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_backend_proto_learning_learning_proto_rawDesc), len(file_backend_proto_learning_learning_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

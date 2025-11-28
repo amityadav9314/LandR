@@ -142,3 +142,26 @@ func (s *LearningService) GetAllTags(ctx context.Context, _ *emptypb.Empty) (*le
 		Tags: tags,
 	}, nil
 }
+
+func (s *LearningService) GetNotificationStatus(ctx context.Context, _ *emptypb.Empty) (*learning.NotificationStatusResponse, error) {
+	// Extract user ID from context (set by auth interceptor)
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		log.Printf("[GetNotificationStatus] ERROR: Failed to get user ID: %v", err)
+		return nil, err
+	}
+	
+	log.Printf("[GetNotificationStatus] Fetching notification status for userID: %s", userID)
+
+	count, hasDue, err := s.core.GetNotificationStatus(ctx, userID)
+	if err != nil {
+		log.Printf("[GetNotificationStatus] ERROR: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get notification status: %v", err)
+	}
+
+	log.Printf("[GetNotificationStatus] SUCCESS - %d due flashcards", count)
+	return &learning.NotificationStatusResponse{
+		DueFlashcardsCount: count,
+		HasDueMaterials:    hasDue,
+	}, nil
+}

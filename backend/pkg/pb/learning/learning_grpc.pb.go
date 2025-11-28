@@ -20,11 +20,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LearningService_AddMaterial_FullMethodName      = "/learning.LearningService/AddMaterial"
-	LearningService_GetDueMaterials_FullMethodName  = "/learning.LearningService/GetDueMaterials"
-	LearningService_GetDueFlashcards_FullMethodName = "/learning.LearningService/GetDueFlashcards"
-	LearningService_CompleteReview_FullMethodName   = "/learning.LearningService/CompleteReview"
-	LearningService_GetAllTags_FullMethodName       = "/learning.LearningService/GetAllTags"
+	LearningService_AddMaterial_FullMethodName           = "/learning.LearningService/AddMaterial"
+	LearningService_GetDueMaterials_FullMethodName       = "/learning.LearningService/GetDueMaterials"
+	LearningService_GetDueFlashcards_FullMethodName      = "/learning.LearningService/GetDueFlashcards"
+	LearningService_CompleteReview_FullMethodName        = "/learning.LearningService/CompleteReview"
+	LearningService_GetAllTags_FullMethodName            = "/learning.LearningService/GetAllTags"
+	LearningService_GetNotificationStatus_FullMethodName = "/learning.LearningService/GetNotificationStatus"
 )
 
 // LearningServiceClient is the client API for LearningService service.
@@ -36,6 +37,7 @@ type LearningServiceClient interface {
 	GetDueFlashcards(ctx context.Context, in *GetDueFlashcardsRequest, opts ...grpc.CallOption) (*FlashcardList, error)
 	CompleteReview(ctx context.Context, in *CompleteReviewRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetAllTags(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllTagsResponse, error)
+	GetNotificationStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NotificationStatusResponse, error)
 }
 
 type learningServiceClient struct {
@@ -96,6 +98,16 @@ func (c *learningServiceClient) GetAllTags(ctx context.Context, in *emptypb.Empt
 	return out, nil
 }
 
+func (c *learningServiceClient) GetNotificationStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NotificationStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(NotificationStatusResponse)
+	err := c.cc.Invoke(ctx, LearningService_GetNotificationStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LearningServiceServer is the server API for LearningService service.
 // All implementations must embed UnimplementedLearningServiceServer
 // for forward compatibility.
@@ -105,6 +117,7 @@ type LearningServiceServer interface {
 	GetDueFlashcards(context.Context, *GetDueFlashcardsRequest) (*FlashcardList, error)
 	CompleteReview(context.Context, *CompleteReviewRequest) (*emptypb.Empty, error)
 	GetAllTags(context.Context, *emptypb.Empty) (*GetAllTagsResponse, error)
+	GetNotificationStatus(context.Context, *emptypb.Empty) (*NotificationStatusResponse, error)
 	mustEmbedUnimplementedLearningServiceServer()
 }
 
@@ -129,6 +142,9 @@ func (UnimplementedLearningServiceServer) CompleteReview(context.Context, *Compl
 }
 func (UnimplementedLearningServiceServer) GetAllTags(context.Context, *emptypb.Empty) (*GetAllTagsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllTags not implemented")
+}
+func (UnimplementedLearningServiceServer) GetNotificationStatus(context.Context, *emptypb.Empty) (*NotificationStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNotificationStatus not implemented")
 }
 func (UnimplementedLearningServiceServer) mustEmbedUnimplementedLearningServiceServer() {}
 func (UnimplementedLearningServiceServer) testEmbeddedByValue()                         {}
@@ -241,6 +257,24 @@ func _LearningService_GetAllTags_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LearningService_GetNotificationStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LearningServiceServer).GetNotificationStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LearningService_GetNotificationStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LearningServiceServer).GetNotificationStatus(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LearningService_ServiceDesc is the grpc.ServiceDesc for LearningService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -267,6 +301,10 @@ var LearningService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllTags",
 			Handler:    _LearningService_GetAllTags_Handler,
+		},
+		{
+			MethodName: "GetNotificationStatus",
+			Handler:    _LearningService_GetNotificationStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

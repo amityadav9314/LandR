@@ -283,6 +283,23 @@ func (s *PostgresStore) GetDueMaterials(ctx context.Context, userID string, page
 	return materials, totalCount, nil
 }
 
+func (s *PostgresStore) GetDueFlashcardsCount(ctx context.Context, userID string) (int32, error) {
+	log.Printf("[Store.GetDueFlashcardsCount] Counting due flashcards for userID: %s", userID)
+	query := `
+		SELECT COUNT(f.id)
+		FROM flashcards f
+		JOIN materials m ON f.material_id = m.id
+		WHERE m.user_id = $1 AND f.next_review_at <= NOW();
+	`
+	var count int32
+	if err := s.db.QueryRow(ctx, query, userID).Scan(&count); err != nil {
+		log.Printf("[Store.GetDueFlashcardsCount] Query failed: %v", err)
+		return 0, fmt.Errorf("failed to count due flashcards: %w", err)
+	}
+	log.Printf("[Store.GetDueFlashcardsCount] Found %d due flashcards", count)
+	return count, nil
+}
+
 func (s *PostgresStore) UpdateFlashcard(ctx context.Context, id string, stage int32, nextReviewAt time.Time) error {
 	log.Printf("[Store.UpdateFlashcard] Updating flashcard: %s, Stage: %d, NextReviewAt: %v", id, stage, nextReviewAt)
 	query := `

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -48,6 +48,23 @@ export const HomeScreen = () => {
     const data = paginatedData?.materials || [];
     const totalCount = paginatedData?.totalCount || 0;
     const totalPages = paginatedData?.totalPages || 0;
+
+    // Fetch notification status (due flashcards count)
+    const { data: notificationData } = useQuery({
+        queryKey: ['notificationStatus'],
+        queryFn: async () => {
+            try {
+                const response = await learningClient.getNotificationStatus({});
+                return response;
+            } catch (err) {
+                console.error('[HOME] Failed to fetch notification status:', err);
+                return { dueFlashcardsCount: 0, hasDueMaterials: false };
+            }
+        },
+        refetchInterval: 60000, // Refetch every minute
+    });
+
+    const dueFlashcardsCount = notificationData?.dueFlashcardsCount || 0;
 
     // Fetch all tags from backend (works with pagination!)
     const { data: tagsData } = useQuery({
@@ -170,102 +187,130 @@ export const HomeScreen = () => {
         <View style={styles.container}>
             <AppHeader />
             
-            <View style={styles.contentContainer}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl refreshing={isLoading} onRefresh={refetch} />
+                }
+            >
                 <View style={styles.header}>
                     <Text style={styles.title}>Welcome, {user?.name}</Text>
                 </View>
 
-            <View style={styles.titleRow}>
-                <Text style={styles.mainTitle}>Due for Review</Text>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => navigation.navigate('AddMaterial')}
-                >
-                    <Text style={styles.addButtonText}>+ Add Material</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search by title..."
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    clearButtonMode="while-editing"
-                />
-                {hasActiveFilters && (
-                    <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
-                        <Text style={styles.clearButtonText}>Clear</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            {/* Tag Filter Chips */}
-            {allTags.length > 0 && (
-                <View style={styles.tagFilterSection}>
-                    <Text style={styles.tagFilterLabel}>Filter by tags:</Text>
-                    <ScrollView 
-                        horizontal 
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.tagFilterContainer}
+                <View style={styles.titleRow}>
+                    <View style={styles.titleWithBadge}>
+                        <Text style={styles.mainTitle}>Due for Review</Text>
+                        {dueFlashcardsCount > 0 && (
+                            <View style={styles.notificationBadge}>
+                                <Text style={styles.notificationBadgeText}>{dueFlashcardsCount}</Text>
+                            </View>
+                        )}
+                    </View>
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => navigation.navigate('AddMaterial')}
                     >
-                        {allTags.map((tag: string) => (
-                            <TouchableOpacity
-                                key={tag}
-                                style={[
-                                    styles.filterTagChip,
-                                    selectedTags.includes(tag) && styles.filterTagChipActive
-                                ]}
-                                onPress={() => toggleTag(tag)}
-                            >
-                                <Text style={[
-                                    styles.filterTagText,
-                                    selectedTags.includes(tag) && styles.filterTagTextActive
-                                ]}>
-                                    {tag}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+                        <Text style={styles.addButtonText}>+ Add Material</Text>
+                    </TouchableOpacity>
                 </View>
-            )}
 
-            {/* Results Count and Pagination Info */}
-            <View style={styles.infoContainer}>
-                {hasActiveFilters ? (
-                    <Text style={styles.resultsCount}>
-                        {filteredMaterials.length} of {data?.length || 0} materials on this page
+                {/* Search Bar */}
+                <View style={styles.searchContainer}>
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search by title..."
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        clearButtonMode="while-editing"
+                    />
+                    {hasActiveFilters && (
+                        <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
+                            <Text style={styles.clearButtonText}>Clear</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Tag Filter Chips */}
+                {allTags.length > 0 && (
+                    <View style={styles.tagFilterSection}>
+                        <Text style={styles.tagFilterLabel}>Filter by tags:</Text>
+                        <ScrollView 
+                            horizontal 
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.tagFilterContainer}
+                            nestedScrollEnabled={true}
+                        >
+                            {allTags.map((tag: string) => (
+                                <TouchableOpacity
+                                    key={tag}
+                                    style={[
+                                        styles.filterTagChip,
+                                        selectedTags.includes(tag) && styles.filterTagChipActive
+                                    ]}
+                                    onPress={() => toggleTag(tag)}
+                                >
+                                    <Text style={[
+                                        styles.filterTagText,
+                                        selectedTags.includes(tag) && styles.filterTagTextActive
+                                    ]}>
+                                        {tag}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
+                {/* Results Count and Pagination Info */}
+                <View style={styles.infoContainer}>
+                    {hasActiveFilters ? (
+                        <Text style={styles.resultsCount}>
+                            {filteredMaterials.length} of {data?.length || 0} materials on this page
+                        </Text>
+                    ) : (
+                        <Text style={styles.resultsCount}>
+                            Page {currentPage} of {totalPages} ({totalCount} total materials)
+                        </Text>
+                    )}
+                </View>
+
+                {error ? (
+                    <Text style={styles.error}>Failed to load materials</Text>
+                ) : filteredMaterials.length === 0 ? (
+                    <Text style={styles.empty}>
+                        {hasActiveFilters 
+                            ? 'No materials match your filters'
+                            : 'No materials due! Good job.'}
                     </Text>
                 ) : (
-                    <Text style={styles.resultsCount}>
-                        Page {currentPage} of {totalPages} ({totalCount} total materials)
-                    </Text>
-                )}
-            </View>
+                    <>
+                        {filteredMaterials.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.card}
+                                onPress={() => navigation.navigate('MaterialDetail', { materialId: item.id, title: item.title })}
+                            >
+                                <View style={styles.cardHeader}>
+                                    <Text style={styles.materialTitle}>{item.title}</Text>
+                                    <View style={styles.badge}>
+                                        <Text style={styles.badgeText}>{item.dueCount}</Text>
+                                    </View>
+                                </View>
 
-            {error ? (
-                <Text style={styles.error}>Failed to load materials</Text>
-            ) : (
-                <FlatList
-                    data={filteredMaterials}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.list}
-                    refreshControl={
-                        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-                    }
-                    ListEmptyComponent={
-                        <Text style={styles.empty}>
-                            {hasActiveFilters 
-                                ? 'No materials match your filters'
-                                : 'No materials due! Good job.'}
-                        </Text>
-                    }
-                    ListFooterComponent={renderPaginationFooter}
-                />
-            )}
-            </View>
+                                <View style={styles.tagsContainer}>
+                                    {item.tags.map((tag, index) => (
+                                        <View key={index} style={styles.tagBadge}>
+                                            <Text style={styles.tagText}>{tag}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                        {renderPaginationFooter()}
+                    </>
+                )}
+            </ScrollView>
         </View>
     );
 };
@@ -275,9 +320,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f5f5f5',
     },
-    contentContainer: {
+    scrollView: {
         flex: 1,
+    },
+    scrollContent: {
         paddingHorizontal: 20,
+        paddingBottom: 20,
     },
     header: {
         marginBottom: 20,
@@ -293,10 +341,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 15,
     },
+    titleWithBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
     mainTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
+    },
+    notificationBadge: {
+        backgroundColor: '#ff4444',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        minWidth: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    notificationBadgeText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     addButton: {
         backgroundColor: '#4285F4',
@@ -382,9 +449,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#666',
         fontStyle: 'italic',
-    },
-    list: {
-        paddingBottom: 80,
     },
     card: {
         backgroundColor: '#fff',

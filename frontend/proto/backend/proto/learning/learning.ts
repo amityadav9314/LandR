@@ -72,6 +72,11 @@ export interface GetAllTagsResponse {
   tags: string[];
 }
 
+export interface NotificationStatusResponse {
+  dueFlashcardsCount: number;
+  hasDueMaterials: boolean;
+}
+
 function createBaseAddMaterialRequest(): AddMaterialRequest {
   return { type: "", content: "", existingTags: [] };
 }
@@ -976,6 +981,82 @@ export const GetAllTagsResponse: MessageFns<GetAllTagsResponse> = {
   },
 };
 
+function createBaseNotificationStatusResponse(): NotificationStatusResponse {
+  return { dueFlashcardsCount: 0, hasDueMaterials: false };
+}
+
+export const NotificationStatusResponse: MessageFns<NotificationStatusResponse> = {
+  encode(message: NotificationStatusResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.dueFlashcardsCount !== 0) {
+      writer.uint32(8).int32(message.dueFlashcardsCount);
+    }
+    if (message.hasDueMaterials !== false) {
+      writer.uint32(16).bool(message.hasDueMaterials);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): NotificationStatusResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseNotificationStatusResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.dueFlashcardsCount = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.hasDueMaterials = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): NotificationStatusResponse {
+    return {
+      dueFlashcardsCount: isSet(object.dueFlashcardsCount) ? globalThis.Number(object.dueFlashcardsCount) : 0,
+      hasDueMaterials: isSet(object.hasDueMaterials) ? globalThis.Boolean(object.hasDueMaterials) : false,
+    };
+  },
+
+  toJSON(message: NotificationStatusResponse): unknown {
+    const obj: any = {};
+    if (message.dueFlashcardsCount !== 0) {
+      obj.dueFlashcardsCount = Math.round(message.dueFlashcardsCount);
+    }
+    if (message.hasDueMaterials !== false) {
+      obj.hasDueMaterials = message.hasDueMaterials;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<NotificationStatusResponse>): NotificationStatusResponse {
+    return NotificationStatusResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<NotificationStatusResponse>): NotificationStatusResponse {
+    const message = createBaseNotificationStatusResponse();
+    message.dueFlashcardsCount = object.dueFlashcardsCount ?? 0;
+    message.hasDueMaterials = object.hasDueMaterials ?? false;
+    return message;
+  },
+};
+
 export interface LearningServiceImplementation<CallContextExt = {}> {
   addMaterial(
     request: AddMaterialRequest,
@@ -991,6 +1072,10 @@ export interface LearningServiceImplementation<CallContextExt = {}> {
   ): Promise<DeepPartial<FlashcardList>>;
   completeReview(request: CompleteReviewRequest, context: CallContext & CallContextExt): Promise<DeepPartial<Empty>>;
   getAllTags(request: Empty, context: CallContext & CallContextExt): Promise<DeepPartial<GetAllTagsResponse>>;
+  getNotificationStatus(
+    request: Empty,
+    context: CallContext & CallContextExt,
+  ): Promise<DeepPartial<NotificationStatusResponse>>;
 }
 
 export interface LearningServiceClient<CallOptionsExt = {}> {
@@ -1008,6 +1093,10 @@ export interface LearningServiceClient<CallOptionsExt = {}> {
   ): Promise<FlashcardList>;
   completeReview(request: DeepPartial<CompleteReviewRequest>, options?: CallOptions & CallOptionsExt): Promise<Empty>;
   getAllTags(request: DeepPartial<Empty>, options?: CallOptions & CallOptionsExt): Promise<GetAllTagsResponse>;
+  getNotificationStatus(
+    request: DeepPartial<Empty>,
+    options?: CallOptions & CallOptionsExt,
+  ): Promise<NotificationStatusResponse>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
