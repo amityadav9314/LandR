@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { learningClient } from '../services/api';
 import { Flashcard } from '../../proto/backend/proto/learning/learning';
+import { AppHeader } from '../components/AppHeader';
 
 type RootStackParamList = {
     Review: { flashcardId: string };
@@ -50,14 +51,19 @@ export const ReviewScreen = () => {
 
     if (!flashcard) {
         return (
-            <View style={styles.center}>
-                <Text>Flashcard not found</Text>
+            <View style={styles.container}>
+                <AppHeader />
+                <View style={styles.center}>
+                    <Text>Flashcard not found</Text>
+                </View>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
+            <AppHeader />
+            <View style={styles.contentContainer}>
             <View style={styles.card}>
                 <Text style={styles.label}>Question</Text>
                 <Text style={styles.text}>{flashcard.question}</Text>
@@ -91,6 +97,7 @@ export const ReviewScreen = () => {
                     )}
                 </TouchableOpacity>
             )}
+            </View>
         </View>
     );
 };
@@ -98,8 +105,11 @@ export const ReviewScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: '#f5f5f5',
+    },
+    contentContainer: {
+        flex: 1,
+        padding: 20,
         justifyContent: 'center',
     },
     center: {

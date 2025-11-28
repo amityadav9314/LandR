@@ -1,5 +1,5 @@
 import { AuthServiceImplementation, LoginRequest, LoginResponse } from '../../proto/backend/proto/auth/auth';
-import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest, GetAllTagsResponse } from '../../proto/backend/proto/learning/learning';
+import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest, GetAllTagsResponse } from '../../proto/backend/proto/learning/learning';
 import { Empty } from '../../proto/backend/google/protobuf/empty';
 
 export const AuthServiceDefinition = {
@@ -31,7 +31,7 @@ export const LearningServiceDefinition = {
         },
         getDueMaterials: {
             name: 'GetDueMaterials',
-            requestType: Empty,
+            requestType: GetDueMaterialsRequest,
             requestStream: false,
             responseType: GetDueMaterialsResponse,
             responseStream: false,

@@ -9,7 +9,7 @@ import "google/protobuf/empty.proto";
 
 service LearningService {
   rpc AddMaterial(AddMaterialRequest) returns (AddMaterialResponse);
-  rpc GetDueMaterials(google.protobuf.Empty) returns (GetDueMaterialsResponse);
+  rpc GetDueMaterials(GetDueMaterialsRequest) returns (GetDueMaterialsResponse);
   rpc GetDueFlashcards(GetDueFlashcardsRequest) returns (FlashcardList);
   rpc CompleteReview(CompleteReviewRequest) returns (google.protobuf.Empty);
   rpc GetAllTags(google.protobuf.Empty) returns (GetAllTagsResponse);
@@ -35,8 +35,17 @@ message MaterialSummary {
   repeated string tags = 4;
 }
 
+message GetDueMaterialsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
 message GetDueMaterialsResponse {
   repeated MaterialSummary materials = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  int32 total_pages = 5;
 }
 
 message GetDueFlashcardsRequest {

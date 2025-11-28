@@ -5,6 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { learningClient } from '../services/api';
 import { Flashcard } from '../../proto/backend/proto/learning/learning';
+import { AppHeader } from '../components/AppHeader';
 
 type RootStackParamList = {
     MaterialDetail: { materialId: string; title: string };
@@ -46,7 +47,9 @@ export const MaterialDetailScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.headerTitle}>{title}</Text>
+            <AppHeader />
+            <View style={styles.contentContainer}>
+                <Text style={styles.headerTitle}>{title}</Text>
 
             {error ? (
                 <Text style={styles.error}>Failed to load flashcards</Text>
@@ -64,6 +67,7 @@ export const MaterialDetailScreen = () => {
                     }
                 />
             )}
+            </View>
         </View>
     );
 };
@@ -72,6 +76,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+    },
+    contentContainer: {
+        flex: 1,
         padding: 20,
     },
     headerTitle: {

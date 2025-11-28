@@ -70,24 +70,42 @@ func (s *LearningService) GetDueFlashcards(ctx context.Context, req *learning.Ge
 	}, nil
 }
 
-func (s *LearningService) GetDueMaterials(ctx context.Context, _ *emptypb.Empty) (*learning.GetDueMaterialsResponse, error) {
+func (s *LearningService) GetDueMaterials(ctx context.Context, req *learning.GetDueMaterialsRequest) (*learning.GetDueMaterialsResponse, error) {
 	// Extract user ID from context (set by auth interceptor)
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		log.Printf("[GetDueMaterials] ERROR: Failed to get user ID: %v", err)
 		return nil, err
 	}
-	log.Printf("[GetDueMaterials] Fetching materials for userID: %s", userID)
+	
+	// Set default values if not provided
+	page := req.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := req.PageSize
+	if pageSize < 1 {
+		pageSize = 10 // Default page size
+	}
+	
+	log.Printf("[GetDueMaterials] Fetching materials for userID: %s, page: %d, pageSize: %d", userID, page, pageSize)
 
-	materials, err := s.core.GetDueMaterials(ctx, userID)
+	materials, totalCount, err := s.core.GetDueMaterials(ctx, userID, page, pageSize)
 	if err != nil {
 		log.Printf("[GetDueMaterials] ERROR: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to get due materials: %v", err)
 	}
 
-	log.Printf("[GetDueMaterials] SUCCESS - Found %d materials", len(materials))
+	// Calculate total pages
+	totalPages := (totalCount + pageSize - 1) / pageSize
+	
+	log.Printf("[GetDueMaterials] SUCCESS - Found %d materials (page %d/%d, total: %d)", len(materials), page, totalPages, totalCount)
 	return &learning.GetDueMaterialsResponse{
-		Materials: materials,
+		Materials:  materials,
+		TotalCount: totalCount,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 

@@ -33,8 +33,17 @@ export interface MaterialSummary {
   tags: string[];
 }
 
+export interface GetDueMaterialsRequest {
+  page: number;
+  pageSize: number;
+}
+
 export interface GetDueMaterialsResponse {
   materials: MaterialSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface GetDueFlashcardsRequest {
@@ -373,14 +382,102 @@ export const MaterialSummary: MessageFns<MaterialSummary> = {
   },
 };
 
+function createBaseGetDueMaterialsRequest(): GetDueMaterialsRequest {
+  return { page: 0, pageSize: 0 };
+}
+
+export const GetDueMaterialsRequest: MessageFns<GetDueMaterialsRequest> = {
+  encode(message: GetDueMaterialsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.page !== 0) {
+      writer.uint32(8).int32(message.page);
+    }
+    if (message.pageSize !== 0) {
+      writer.uint32(16).int32(message.pageSize);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetDueMaterialsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetDueMaterialsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.page = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.pageSize = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetDueMaterialsRequest {
+    return {
+      page: isSet(object.page) ? globalThis.Number(object.page) : 0,
+      pageSize: isSet(object.pageSize) ? globalThis.Number(object.pageSize) : 0,
+    };
+  },
+
+  toJSON(message: GetDueMaterialsRequest): unknown {
+    const obj: any = {};
+    if (message.page !== 0) {
+      obj.page = Math.round(message.page);
+    }
+    if (message.pageSize !== 0) {
+      obj.pageSize = Math.round(message.pageSize);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetDueMaterialsRequest>): GetDueMaterialsRequest {
+    return GetDueMaterialsRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetDueMaterialsRequest>): GetDueMaterialsRequest {
+    const message = createBaseGetDueMaterialsRequest();
+    message.page = object.page ?? 0;
+    message.pageSize = object.pageSize ?? 0;
+    return message;
+  },
+};
+
 function createBaseGetDueMaterialsResponse(): GetDueMaterialsResponse {
-  return { materials: [] };
+  return { materials: [], totalCount: 0, page: 0, pageSize: 0, totalPages: 0 };
 }
 
 export const GetDueMaterialsResponse: MessageFns<GetDueMaterialsResponse> = {
   encode(message: GetDueMaterialsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.materials) {
       MaterialSummary.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.totalCount !== 0) {
+      writer.uint32(16).int32(message.totalCount);
+    }
+    if (message.page !== 0) {
+      writer.uint32(24).int32(message.page);
+    }
+    if (message.pageSize !== 0) {
+      writer.uint32(32).int32(message.pageSize);
+    }
+    if (message.totalPages !== 0) {
+      writer.uint32(40).int32(message.totalPages);
     }
     return writer;
   },
@@ -400,6 +497,38 @@ export const GetDueMaterialsResponse: MessageFns<GetDueMaterialsResponse> = {
           message.materials.push(MaterialSummary.decode(reader, reader.uint32()));
           continue;
         }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.totalCount = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.page = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.pageSize = reader.int32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.totalPages = reader.int32();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -414,6 +543,10 @@ export const GetDueMaterialsResponse: MessageFns<GetDueMaterialsResponse> = {
       materials: globalThis.Array.isArray(object?.materials)
         ? object.materials.map((e: any) => MaterialSummary.fromJSON(e))
         : [],
+      totalCount: isSet(object.totalCount) ? globalThis.Number(object.totalCount) : 0,
+      page: isSet(object.page) ? globalThis.Number(object.page) : 0,
+      pageSize: isSet(object.pageSize) ? globalThis.Number(object.pageSize) : 0,
+      totalPages: isSet(object.totalPages) ? globalThis.Number(object.totalPages) : 0,
     };
   },
 
@@ -421,6 +554,18 @@ export const GetDueMaterialsResponse: MessageFns<GetDueMaterialsResponse> = {
     const obj: any = {};
     if (message.materials?.length) {
       obj.materials = message.materials.map((e) => MaterialSummary.toJSON(e));
+    }
+    if (message.totalCount !== 0) {
+      obj.totalCount = Math.round(message.totalCount);
+    }
+    if (message.page !== 0) {
+      obj.page = Math.round(message.page);
+    }
+    if (message.pageSize !== 0) {
+      obj.pageSize = Math.round(message.pageSize);
+    }
+    if (message.totalPages !== 0) {
+      obj.totalPages = Math.round(message.totalPages);
     }
     return obj;
   },
@@ -431,6 +576,10 @@ export const GetDueMaterialsResponse: MessageFns<GetDueMaterialsResponse> = {
   fromPartial(object: DeepPartial<GetDueMaterialsResponse>): GetDueMaterialsResponse {
     const message = createBaseGetDueMaterialsResponse();
     message.materials = object.materials?.map((e) => MaterialSummary.fromPartial(e)) || [];
+    message.totalCount = object.totalCount ?? 0;
+    message.page = object.page ?? 0;
+    message.pageSize = object.pageSize ?? 0;
+    message.totalPages = object.totalPages ?? 0;
     return message;
   },
 };
@@ -832,7 +981,10 @@ export interface LearningServiceImplementation<CallContextExt = {}> {
     request: AddMaterialRequest,
     context: CallContext & CallContextExt,
   ): Promise<DeepPartial<AddMaterialResponse>>;
-  getDueMaterials(request: Empty, context: CallContext & CallContextExt): Promise<DeepPartial<GetDueMaterialsResponse>>;
+  getDueMaterials(
+    request: GetDueMaterialsRequest,
+    context: CallContext & CallContextExt,
+  ): Promise<DeepPartial<GetDueMaterialsResponse>>;
   getDueFlashcards(
     request: GetDueFlashcardsRequest,
     context: CallContext & CallContextExt,
@@ -847,7 +999,7 @@ export interface LearningServiceClient<CallOptionsExt = {}> {
     options?: CallOptions & CallOptionsExt,
   ): Promise<AddMaterialResponse>;
   getDueMaterials(
-    request: DeepPartial<Empty>,
+    request: DeepPartial<GetDueMaterialsRequest>,
     options?: CallOptions & CallOptionsExt,
   ): Promise<GetDueMaterialsResponse>;
   getDueFlashcards(

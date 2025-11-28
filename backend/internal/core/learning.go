@@ -114,44 +114,69 @@ func (c *LearningCore) GetDueFlashcards(ctx context.Context, userID, materialID 
 	return cards, nil
 }
 
-func (c *LearningCore) GetDueMaterials(ctx context.Context, userID string) ([]*learning.MaterialSummary, error) {
-	log.Printf("[Core.GetDueMaterials] Querying for userID: %s", userID)
-	materials, err := c.store.GetDueMaterials(ctx, userID)
+func (c *LearningCore) GetDueMaterials(ctx context.Context, userID string, page, pageSize int32) ([]*learning.MaterialSummary, int32, error) {
+	log.Printf("[Core.GetDueMaterials] Querying for userID: %s, page: %d, pageSize: %d", userID, page, pageSize)
+	materials, totalCount, err := c.store.GetDueMaterials(ctx, userID, page, pageSize)
 	if err != nil {
 		log.Printf("[Core.GetDueMaterials] Query failed: %v", err)
-		return nil, err
+		return nil, 0, err
 	}
-	log.Printf("[Core.GetDueMaterials] Found %d materials", len(materials))
-	return materials, nil
+	log.Printf("[Core.GetDueMaterials] Found %d materials (total: %d)", len(materials), totalCount)
+	return materials, totalCount, nil
 }
 
 func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) error {
 	log.Printf("[Core.CompleteReview] Updating flashcard: %s", flashcardID)
-	// Simple SRS logic: Always bump to next stage for now, or just reset.
-	// For MVP:
-	// Stage 1: 1 day
-	// Stage 2: 3 days
-	// Stage 3: 7 days
-	// Stage 4: 15 days
-	// Stage 5: 30 days
-
-	// We need to fetch the card first to know current stage.
-	// For now, let's assume we just increment stage and set review time.
-	// This requires a GetFlashcard method or we pass current stage from frontend.
-	// Let's implement a simple update: UpdateFlashcard(id, stage+1, now + interval)
-
-	// Since we don't have the current stage in the request, we'll assume the user sent the review
-	// and we just want to mark it reviewed.
-	// Ideally, we should read the card. Let's keep it simple:
-	// We will just update the review time to +1 day for now (Stage 1).
-	// TODO: Implement full SRS logic by reading card first.
-
-	err := c.store.UpdateFlashcard(ctx, flashcardID, 1, time.Now().Add(24*time.Hour))
+	
+	// Fetch the current flashcard to get its stage
+	card, err := c.store.GetFlashcard(ctx, flashcardID)
+	if err != nil {
+		log.Printf("[Core.CompleteReview] Failed to get flashcard: %v", err)
+		return fmt.Errorf("failed to get flashcard: %w", err)
+	}
+	
+	// Implement SRS logic: increment stage and calculate next review time
+	// Stage 0: New card -> 1 day
+	// Stage 1: 1 day -> 3 days
+	// Stage 2: 3 days -> 7 days
+	// Stage 3: 7 days -> 15 days
+	// Stage 4: 15 days -> 30 days
+	// Stage 5+: 30 days (max)
+	
+	currentStage := card.Stage
+	nextStage := currentStage + 1
+	
+	// Calculate next review interval based on new stage
+	var intervalDays int
+	switch nextStage {
+	case 1:
+		intervalDays = 1
+	case 2:
+		intervalDays = 3
+	case 3:
+		intervalDays = 7
+	case 4:
+		intervalDays = 15
+	default:
+		// Stage 5 and above: 30 days
+		intervalDays = 30
+		if nextStage > 5 {
+			nextStage = 5 // Cap at stage 5
+		}
+	}
+	
+	nextReviewAt := time.Now().Add(time.Duration(intervalDays) * 24 * time.Hour)
+	
+	log.Printf("[Core.CompleteReview] Advancing from stage %d to %d (next review in %d days)", 
+		currentStage, nextStage, intervalDays)
+	
+	err = c.store.UpdateFlashcard(ctx, flashcardID, nextStage, nextReviewAt)
 	if err != nil {
 		log.Printf("[Core.CompleteReview] Update failed: %v", err)
 		return err
 	}
-	log.Printf("[Core.CompleteReview] Updated successfully")
+	
+	log.Printf("[Core.CompleteReview] Updated successfully to stage %d", nextStage)
 	return nil
 }
 

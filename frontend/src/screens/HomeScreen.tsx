@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { learningClient } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { MaterialSummary } from '../../proto/backend/proto/learning/learning';
+import { MATERIALS_PER_PAGE } from '../utils/constants';
+import { AppHeader } from '../components/AppHeader';
 
 // Define navigation types
 type RootStackParamList = {
@@ -18,26 +20,34 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'H
 
 export const HomeScreen = () => {
     const navigation = useNavigation<HomeScreenNavigationProp>();
-    const { user, logout } = useAuthStore();
+    const { user } = useAuthStore();
     
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const { data, isLoading, error, refetch } = useQuery({
-        queryKey: ['dueMaterials'],
+    const { data: paginatedData, isLoading, error, refetch } = useQuery({
+        queryKey: ['dueMaterials', currentPage],
         queryFn: async () => {
-            console.log('[HOME] Fetching due materials...');
+            console.log('[HOME] Fetching due materials page:', currentPage);
             try {
-                const response = await learningClient.getDueMaterials({});
-                console.log('[HOME] Got materials:', response.materials?.length || 0);
-                return response.materials;
+                const response = await learningClient.getDueMaterials({
+                    page: currentPage,
+                    pageSize: MATERIALS_PER_PAGE,
+                });
+                console.log('[HOME] Got materials:', response.materials?.length || 0, 'of', response.totalCount);
+                return response;
             } catch (err) {
                 console.error('[HOME] Failed to fetch materials:', err);
-                return [];
+                return { materials: [], totalCount: 0, page: 1, pageSize: MATERIALS_PER_PAGE, totalPages: 0 };
             }
         },
     });
+
+    const data = paginatedData?.materials || [];
+    const totalCount = paginatedData?.totalCount || 0;
+    const totalPages = paginatedData?.totalPages || 0;
 
     // Fetch all tags from backend (works with pagination!)
     const { data: tagsData } = useQuery({
@@ -57,7 +67,7 @@ export const HomeScreen = () => {
 
     const allTags = tagsData || [];
 
-    // Filter materials based on search and selected tags
+    // Filter materials based on search and selected tags (client-side filtering)
     const filteredMaterials = useMemo(() => {
         if (!data) return [];
         
@@ -74,6 +84,18 @@ export const HomeScreen = () => {
         });
     }, [data, searchQuery, selectedTags]);
 
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
+
     const toggleTag = (tag: string) => {
         setSelectedTags(prev => 
             prev.includes(tag) 
@@ -85,6 +107,7 @@ export const HomeScreen = () => {
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedTags([]);
+        setCurrentPage(1);
     };
 
     const renderItem = ({ item }: { item: MaterialSummary }) => (
@@ -111,16 +134,56 @@ export const HomeScreen = () => {
 
     const hasActiveFilters = searchQuery.trim() !== '' || selectedTags.length > 0;
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Welcome, {user?.name}</Text>
-                <TouchableOpacity onPress={logout}>
-                    <Text style={styles.logout}>Logout</Text>
+    const renderPaginationFooter = () => {
+        if (hasActiveFilters || totalPages <= 1) return null;
+        
+        return (
+            <View style={styles.paginationContainer}>
+                <TouchableOpacity
+                    style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
+                    onPress={handlePrevPage}
+                    disabled={currentPage === 1}
+                >
+                    <Text style={[styles.paginationButtonText, currentPage === 1 && styles.paginationButtonTextDisabled]}>
+                        Previous
+                    </Text>
+                </TouchableOpacity>
+                
+                <Text style={styles.paginationText}>
+                    Page {currentPage} of {totalPages}
+                </Text>
+                
+                <TouchableOpacity
+                    style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
+                    onPress={handleNextPage}
+                    disabled={currentPage === totalPages}
+                >
+                    <Text style={[styles.paginationButtonText, currentPage === totalPages && styles.paginationButtonTextDisabled]}>
+                        Next
+                    </Text>
                 </TouchableOpacity>
             </View>
+        );
+    };
 
-            <Text style={styles.mainTitle}>Due for Review</Text>
+    return (
+        <View style={styles.container}>
+            <AppHeader />
+            
+            <View style={styles.contentContainer}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>Welcome, {user?.name}</Text>
+                </View>
+
+            <View style={styles.titleRow}>
+                <Text style={styles.mainTitle}>Due for Review</Text>
+                <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => navigation.navigate('AddMaterial')}
+                >
+                    <Text style={styles.addButtonText}>+ Add Material</Text>
+                </TouchableOpacity>
+            </View>
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
@@ -168,12 +231,18 @@ export const HomeScreen = () => {
                 </View>
             )}
 
-            {/* Results Count */}
-            {hasActiveFilters && (
-                <Text style={styles.resultsCount}>
-                    {filteredMaterials.length} of {data?.length || 0} materials
-                </Text>
-            )}
+            {/* Results Count and Pagination Info */}
+            <View style={styles.infoContainer}>
+                {hasActiveFilters ? (
+                    <Text style={styles.resultsCount}>
+                        {filteredMaterials.length} of {data?.length || 0} materials on this page
+                    </Text>
+                ) : (
+                    <Text style={styles.resultsCount}>
+                        Page {currentPage} of {totalPages} ({totalCount} total materials)
+                    </Text>
+                )}
+            </View>
 
             {error ? (
                 <Text style={styles.error}>Failed to load materials</Text>
@@ -193,15 +262,10 @@ export const HomeScreen = () => {
                                 : 'No materials due! Good job.'}
                         </Text>
                     }
+                    ListFooterComponent={renderPaginationFooter}
                 />
             )}
-
-            <TouchableOpacity
-                style={styles.fab}
-                onPress={() => navigation.navigate('AddMaterial')}
-            >
-                <Text style={styles.fabText}>+</Text>
-            </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -210,13 +274,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 50,
+    },
+    contentContainer: {
+        flex: 1,
         paddingHorizontal: 20,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 20,
     },
     title: {
@@ -224,15 +287,32 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
     },
-    logout: {
-        color: '#d9534f',
-        fontWeight: '600',
+    titleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
     },
     mainTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 15,
         color: '#333',
+    },
+    addButton: {
+        backgroundColor: '#4285F4',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 8,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
+    },
+    addButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
     },
     searchContainer: {
         flexDirection: 'row',
@@ -295,10 +375,12 @@ const styles = StyleSheet.create({
     filterTagTextActive: {
         color: '#fff',
     },
+    infoContainer: {
+        marginBottom: 10,
+    },
     resultsCount: {
         fontSize: 13,
         color: '#666',
-        marginBottom: 10,
         fontStyle: 'italic',
     },
     list: {
@@ -365,26 +447,46 @@ const styles = StyleSheet.create({
         marginTop: 50,
         fontStyle: 'italic',
     },
-    fab: {
-        position: 'absolute',
-        bottom: 30,
-        right: 30,
-        backgroundColor: '#4285F4',
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        justifyContent: 'center',
+    paginationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        elevation: 5,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#ddd',
+        marginTop: 10,
+        marginBottom: 10,
+        borderRadius: 10,
+        elevation: 2,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
     },
-    fabText: {
+    paginationButton: {
+        backgroundColor: '#4285F4',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
+        minWidth: 100,
+        alignItems: 'center',
+    },
+    paginationButtonDisabled: {
+        backgroundColor: '#ccc',
+    },
+    paginationButtonText: {
         color: '#fff',
-        fontSize: 30,
-        fontWeight: 'bold',
-        marginTop: -2,
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    paginationButtonTextDisabled: {
+        color: '#999',
+    },
+    paginationText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
     },
 });

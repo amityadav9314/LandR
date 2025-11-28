@@ -32,7 +32,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LearningServiceClient interface {
 	AddMaterial(ctx context.Context, in *AddMaterialRequest, opts ...grpc.CallOption) (*AddMaterialResponse, error)
-	GetDueMaterials(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetDueMaterialsResponse, error)
+	GetDueMaterials(ctx context.Context, in *GetDueMaterialsRequest, opts ...grpc.CallOption) (*GetDueMaterialsResponse, error)
 	GetDueFlashcards(ctx context.Context, in *GetDueFlashcardsRequest, opts ...grpc.CallOption) (*FlashcardList, error)
 	CompleteReview(ctx context.Context, in *CompleteReviewRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetAllTags(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllTagsResponse, error)
@@ -56,7 +56,7 @@ func (c *learningServiceClient) AddMaterial(ctx context.Context, in *AddMaterial
 	return out, nil
 }
 
-func (c *learningServiceClient) GetDueMaterials(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetDueMaterialsResponse, error) {
+func (c *learningServiceClient) GetDueMaterials(ctx context.Context, in *GetDueMaterialsRequest, opts ...grpc.CallOption) (*GetDueMaterialsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDueMaterialsResponse)
 	err := c.cc.Invoke(ctx, LearningService_GetDueMaterials_FullMethodName, in, out, cOpts...)
@@ -101,7 +101,7 @@ func (c *learningServiceClient) GetAllTags(ctx context.Context, in *emptypb.Empt
 // for forward compatibility.
 type LearningServiceServer interface {
 	AddMaterial(context.Context, *AddMaterialRequest) (*AddMaterialResponse, error)
-	GetDueMaterials(context.Context, *emptypb.Empty) (*GetDueMaterialsResponse, error)
+	GetDueMaterials(context.Context, *GetDueMaterialsRequest) (*GetDueMaterialsResponse, error)
 	GetDueFlashcards(context.Context, *GetDueFlashcardsRequest) (*FlashcardList, error)
 	CompleteReview(context.Context, *CompleteReviewRequest) (*emptypb.Empty, error)
 	GetAllTags(context.Context, *emptypb.Empty) (*GetAllTagsResponse, error)
@@ -118,7 +118,7 @@ type UnimplementedLearningServiceServer struct{}
 func (UnimplementedLearningServiceServer) AddMaterial(context.Context, *AddMaterialRequest) (*AddMaterialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddMaterial not implemented")
 }
-func (UnimplementedLearningServiceServer) GetDueMaterials(context.Context, *emptypb.Empty) (*GetDueMaterialsResponse, error) {
+func (UnimplementedLearningServiceServer) GetDueMaterials(context.Context, *GetDueMaterialsRequest) (*GetDueMaterialsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDueMaterials not implemented")
 }
 func (UnimplementedLearningServiceServer) GetDueFlashcards(context.Context, *GetDueFlashcardsRequest) (*FlashcardList, error) {
@@ -170,7 +170,7 @@ func _LearningService_AddMaterial_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _LearningService_GetDueMaterials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(GetDueMaterialsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func _LearningService_GetDueMaterials_Handler(srv interface{}, ctx context.Conte
 		FullMethod: LearningService_GetDueMaterials_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LearningServiceServer).GetDueMaterials(ctx, req.(*emptypb.Empty))
+		return srv.(LearningServiceServer).GetDueMaterials(ctx, req.(*GetDueMaterialsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

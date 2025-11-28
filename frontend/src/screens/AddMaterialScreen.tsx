@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator,
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { learningClient } from '../services/api';
+import { AppHeader } from '../components/AppHeader';
 
 export const AddMaterialScreen = () => {
     const navigation = useNavigation();
@@ -47,7 +48,9 @@ export const AddMaterialScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Add New Material</Text>
+            <AppHeader />
+            <View style={styles.contentContainer}>
+                <Text style={styles.title}>Add New Material</Text>
 
             <View style={styles.typeContainer}>
                 <TouchableOpacity
@@ -85,6 +88,7 @@ export const AddMaterialScreen = () => {
                     <Text style={styles.submitText}>Generate Flashcards</Text>
                 )}
             </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -92,9 +96,12 @@ export const AddMaterialScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f5f5f5',
+    },
+    contentContainer: {
+        flex: 1,
         padding: 20,
         backgroundColor: '#fff',
-        paddingTop: 50,
     },
     title: {
         fontSize: 24,
