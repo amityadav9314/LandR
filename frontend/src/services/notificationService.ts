@@ -3,18 +3,28 @@ import { Platform } from 'react-native';
 import { learningClient } from './api';
 
 // Configure notification behavior
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
-
 export class NotificationService {
     private static notificationIdentifier: string | null = null;
+    private static isConfigured = false;
+
+    private static configure() {
+        if (this.isConfigured) return;
+
+        try {
+            Notifications.setNotificationHandler({
+                handleNotification: async () => ({
+                    shouldShowAlert: true,
+                    shouldPlaySound: true,
+                    shouldSetBadge: true,
+                    shouldShowBanner: true,
+                    shouldShowList: true,
+                }),
+            });
+            this.isConfigured = true;
+        } catch (error) {
+            console.warn('[Notifications] Failed to configure notification handler (likely running in Expo Go):', error);
+        }
+    }
 
     /**
      * Request notification permissions from the user
@@ -130,11 +140,16 @@ export class NotificationService {
      * Initialize notification service
      */
     static async initialize(): Promise<void> {
-        const hasPermission = await this.requestPermissions();
+        try {
+            this.configure();
+            const hasPermission = await this.requestPermissions();
 
-        if (hasPermission) {
-            await this.scheduleDailyNotification();
-            await this.checkAndNotify();
+            if (hasPermission) {
+                await this.scheduleDailyNotification();
+                await this.checkAndNotify();
+            }
+        } catch (error) {
+            console.warn('[Notifications] Failed to initialize (likely running in Expo Go):', error);
         }
     }
 }

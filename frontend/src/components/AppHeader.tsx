@@ -1,54 +1,79 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+// @ts-ignore
+import { Ionicons } from '@expo/vector-icons';
+// import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '../navigation/ManualRouter';
 import { useAuthStore } from '../store/authStore';
 
 export const AppHeader = () => {
-    const navigation = useNavigation();
+    const { navigate, goBack, canGoBack } = useNavigation();
     const { logout } = useAuthStore();
 
     const handleHomePress = () => {
-        // Navigate to home screen
-        navigation.navigate('Home' as never);
+        navigate('Home');
     };
 
     return (
-        <View style={styles.logoContainer}>
-            <TouchableOpacity style={styles.homeIcon} onPress={handleHomePress}>
-                <Text style={styles.homeIconText}>🏠</Text>
+        <View style={styles.headerContainer}>
+            <View style={styles.leftContainer}>
+                {canGoBack && (
+                    <TouchableOpacity onPress={goBack} style={styles.iconButton}>
+                        <Ionicons name="arrow-back" size={24} color="#333" />
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={handleHomePress} style={styles.iconButton}>
+                    <Text style={{ fontSize: 24 }}>🏠</Text>
+                </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={handleHomePress} style={styles.centerContainer}>
+                <Text style={styles.logo}>LandR</Text>
             </TouchableOpacity>
-            <Text style={styles.logo}>LandR</Text>
-            <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-                <Text style={styles.logout}>Logout</Text>
-            </TouchableOpacity>
+
+            <View style={styles.rightContainer}>
+                <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+                    <Text style={styles.logout}>Logout</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    logoContainer: {
+    headerContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 5,
-        marginBottom: 15,
-        paddingHorizontal: 20,
+        paddingTop: 10,
+        paddingBottom: 15,
+        paddingHorizontal: 15,
         backgroundColor: '#f5f5f5',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
     },
-    homeIcon: {
+    leftContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    centerContainer: {
+        flex: 2,
+        alignItems: 'center',
+    },
+    rightContainer: {
+        flex: 1,
+        alignItems: 'flex-end',
+    },
+    iconButton: {
         padding: 8,
-    },
-    homeIconText: {
-        fontSize: 24,
+        marginRight: 5,
     },
     logo: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#4285F4',
         letterSpacing: 1,
-        position: 'absolute',
-        left: '50%',
-        transform: [{ translateX: -35 }],
     },
     logoutButton: {
         padding: 8,
@@ -56,6 +81,7 @@ const styles = StyleSheet.create({
     logout: {
         color: '#d9534f',
         fontWeight: '600',
+        fontSize: 14,
     },
 });
 

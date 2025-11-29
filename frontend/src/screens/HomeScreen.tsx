@@ -1,27 +1,28 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// import { useNavigation } from '@react-navigation/native';
+// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { MaterialSummary } from '../../proto/backend/proto/learning/learning';
 import { MATERIALS_PER_PAGE } from '../utils/constants';
 import { AppHeader } from '../components/AppHeader';
 
-// Define navigation types
-type RootStackParamList = {
-    Home: undefined;
-    AddMaterial: undefined;
-    MaterialDetail: { materialId: string; title: string };
-};
+// Define navigation types (Simplified for manual router)
+// type RootStackParamList = {
+//     Home: undefined;
+//     AddMaterial: undefined;
+//     MaterialDetail: { materialId: string; title: string };
+// };
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+// type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 export const HomeScreen = () => {
-    const navigation = useNavigation<HomeScreenNavigationProp>();
+    const navigation = useNavigation();
     const { user } = useAuthStore();
-    
+
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -87,16 +88,16 @@ export const HomeScreen = () => {
     // Filter materials based on search and selected tags (client-side filtering)
     const filteredMaterials = useMemo(() => {
         if (!data) return [];
-        
+
         return data.filter(material => {
             // Filter by search query (title contains)
-            const matchesSearch = searchQuery.trim() === '' || 
+            const matchesSearch = searchQuery.trim() === '' ||
                 material.title.toLowerCase().includes(searchQuery.toLowerCase());
-            
+
             // Filter by selected tags (material must have ALL selected tags)
-            const matchesTags = selectedTags.length === 0 || 
+            const matchesTags = selectedTags.length === 0 ||
                 selectedTags.every(tag => material.tags.includes(tag));
-            
+
             return matchesSearch && matchesTags;
         });
     }, [data, searchQuery, selectedTags]);
@@ -114,8 +115,8 @@ export const HomeScreen = () => {
     };
 
     const toggleTag = (tag: string) => {
-        setSelectedTags(prev => 
-            prev.includes(tag) 
+        setSelectedTags(prev =>
+            prev.includes(tag)
                 ? prev.filter(t => t !== tag)
                 : [...prev, tag]
         );
@@ -153,7 +154,7 @@ export const HomeScreen = () => {
 
     const renderPaginationFooter = () => {
         if (hasActiveFilters || totalPages <= 1) return null;
-        
+
         return (
             <View style={styles.paginationContainer}>
                 <TouchableOpacity
@@ -165,11 +166,11 @@ export const HomeScreen = () => {
                         Previous
                     </Text>
                 </TouchableOpacity>
-                
+
                 <Text style={styles.paginationText}>
                     Page {currentPage} of {totalPages}
                 </Text>
-                
+
                 <TouchableOpacity
                     style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
                     onPress={handleNextPage}
@@ -186,7 +187,7 @@ export const HomeScreen = () => {
     return (
         <View style={styles.container}>
             <AppHeader />
-            
+
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
@@ -235,8 +236,8 @@ export const HomeScreen = () => {
                 {allTags.length > 0 && (
                     <View style={styles.tagFilterSection}>
                         <Text style={styles.tagFilterLabel}>Filter by tags:</Text>
-                        <ScrollView 
-                            horizontal 
+                        <ScrollView
+                            horizontal
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={styles.tagFilterContainer}
                             nestedScrollEnabled={true}
@@ -279,7 +280,7 @@ export const HomeScreen = () => {
                     <Text style={styles.error}>Failed to load materials</Text>
                 ) : filteredMaterials.length === 0 ? (
                     <Text style={styles.empty}>
-                        {hasActiveFilters 
+                        {hasActiveFilters
                             ? 'No materials match your filters'
                             : 'No materials due! Good job.'}
                     </Text>

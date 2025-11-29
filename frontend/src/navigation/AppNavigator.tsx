@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, View } from 'react-native';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -10,7 +10,7 @@ import { ReviewScreen } from '../screens/ReviewScreen';
 import { MaterialDetailScreen } from '../screens/MaterialDetailScreen';
 import { useAuthStore } from '../store/authStore';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 export const AppNavigator = () => {
     const { token, isLoading, restoreSession } = useAuthStore();
@@ -27,28 +27,15 @@ export const AppNavigator = () => {
         );
     }
 
-    const linking = {
-        prefixes: [Linking.createURL('/')],
-        config: {
-            screens: {
-                Login: 'login',
-                Home: '',
-                AddMaterial: 'add-material',
-                MaterialDetail: 'material/:materialId',
-                Review: 'review/:flashcardId',
-            },
-        },
-    };
-
     return (
-        <NavigationContainer linking={linking}>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <NavigationContainer>
+            <Stack.Navigator>
                 {token ? (
                     <>
                         <Stack.Screen name="Home" component={HomeScreen} />
-                        <Stack.Screen name="AddMaterial" component={AddMaterialScreen} options={{ headerShown: true, title: 'Add Material' }} />
-                        <Stack.Screen name="MaterialDetail" component={MaterialDetailScreen} options={{ headerShown: true, title: 'Flashcards' }} />
-                        <Stack.Screen name="Review" component={ReviewScreen} options={{ headerShown: true, title: 'Review Flashcard' }} />
+                        <Stack.Screen name="AddMaterial" component={AddMaterialScreen} />
+                        <Stack.Screen name="Review" component={ReviewScreen} />
+                        <Stack.Screen name="MaterialDetail" component={MaterialDetailScreen} />
                     </>
                 ) : (
                     <Stack.Screen name="Login" component={LoginScreen} />

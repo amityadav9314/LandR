@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "LandR",
+    "slug": "landr",
     "version": "1.0.0",
+    "scheme": "landr",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,19 +14,24 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.amityadav.landr",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
+      "package": "com.amityadav.landr",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE", "SCHEDULE_EXACT_ALARM"],
-      "useNextNotificationsApi": true
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM"
+      ]
     },
     "notification": {
       "icon": "./assets/icon.png",
@@ -34,18 +39,14 @@
       "androidMode": "default",
       "androidCollapsedTitle": "LandR Notifications"
     },
-    "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/icon.png",
-          "color": "#4285F4",
-          "sounds": []
-        }
-      ]
-    ],
+    "plugins": [],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4782c64d-c1b3-4115-aaf3-60b516dcd34d"
+      }
     }
   }
 }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
+// import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
 
@@ -22,14 +23,14 @@ export const AddMaterialScreen = () => {
             console.log('[ADD_MATERIAL] Success! Created flashcards:', data.flashcardsCreated);
             console.log('[ADD_MATERIAL] Material title:', data.title);
             console.log('[ADD_MATERIAL] Tags:', data.tags);
-            
+
             Alert.alert('Success', `Created ${data.flashcardsCreated} flashcards for "${data.title}"!`);
-            
+
             // Invalidate all queries to refresh the UI
             queryClient.invalidateQueries({ queryKey: ['dueMaterials'] });
             queryClient.invalidateQueries({ queryKey: ['dueFlashcards'] });
             queryClient.invalidateQueries({ queryKey: ['allTags'] }); // Refresh tags list
-            
+
             navigation.goBack();
         },
         onError: (error) => {
@@ -52,42 +53,42 @@ export const AddMaterialScreen = () => {
             <View style={styles.contentContainer}>
                 <Text style={styles.title}>Add New Material</Text>
 
-            <View style={styles.typeContainer}>
-                <TouchableOpacity
-                    style={[styles.typeButton, type === 'TEXT' && styles.activeType]}
-                    onPress={() => setType('TEXT')}
-                >
-                    <Text style={[styles.typeText, type === 'TEXT' && styles.activeTypeText]}>Text</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.typeButton, type === 'LINK' && styles.activeType]}
-                    onPress={() => setType('LINK')}
-                >
-                    <Text style={[styles.typeText, type === 'LINK' && styles.activeTypeText]}>Link</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={styles.typeContainer}>
+                    <TouchableOpacity
+                        style={[styles.typeButton, type === 'TEXT' && styles.activeType]}
+                        onPress={() => setType('TEXT')}
+                    >
+                        <Text style={[styles.typeText, type === 'TEXT' && styles.activeTypeText]}>Text</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.typeButton, type === 'LINK' && styles.activeType]}
+                        onPress={() => setType('LINK')}
+                    >
+                        <Text style={[styles.typeText, type === 'LINK' && styles.activeTypeText]}>Link</Text>
+                    </TouchableOpacity>
+                </View>
 
-            <TextInput
-                style={styles.input}
-                placeholder={type === 'TEXT' ? "Paste your text here..." : "Enter URL here..."}
-                multiline={type === 'TEXT'}
-                numberOfLines={type === 'TEXT' ? 10 : 1}
-                value={content}
-                onChangeText={setContent}
-                textAlignVertical="top"
-            />
+                <TextInput
+                    style={styles.input}
+                    placeholder={type === 'TEXT' ? "Paste your text here..." : "Enter URL here..."}
+                    multiline={type === 'TEXT'}
+                    numberOfLines={type === 'TEXT' ? 10 : 1}
+                    value={content}
+                    onChangeText={setContent}
+                    textAlignVertical="top"
+                />
 
-            <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmit}
-                disabled={mutation.isPending}
-            >
-                {mutation.isPending ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.submitText}>Generate Flashcards</Text>
-                )}
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmit}
+                    disabled={mutation.isPending}
+                >
+                    {mutation.isPending ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={styles.submitText}>Generate Flashcards</Text>
+                    )}
+                </TouchableOpacity>
             </View>
         </View>
     );

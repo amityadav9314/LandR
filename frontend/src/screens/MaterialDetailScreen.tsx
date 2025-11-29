@@ -1,24 +1,16 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, FlatList, RefreshControl } from 'react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { Flashcard } from '../../proto/backend/proto/learning/learning';
 import { AppHeader } from '../components/AppHeader';
 
-type RootStackParamList = {
-    MaterialDetail: { materialId: string; title: string };
-    Review: { flashcardId: string };
-};
-
-type MaterialDetailScreenRouteProp = RouteProp<RootStackParamList, 'MaterialDetail'>;
-type MaterialDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MaterialDetail'>;
-
 export const MaterialDetailScreen = () => {
-    const navigation = useNavigation<MaterialDetailScreenNavigationProp>();
-    const route = useRoute<MaterialDetailScreenRouteProp>();
-    const { materialId, title } = route.params;
+    const navigation = useNavigation();
+    const route = useRoute();
+    const { materialId, title } = route.params as { materialId: string; title: string };
     const displayTitle = title || 'Material Details';
 
     const { data, isLoading, error, refetch } = useQuery({

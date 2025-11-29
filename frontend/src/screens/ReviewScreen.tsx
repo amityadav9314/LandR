@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { Flashcard } from '../../proto/backend/proto/learning/learning';
 import { AppHeader } from '../components/AppHeader';
 
-type RootStackParamList = {
-    Review: { flashcardId: string };
-};
+// type RootStackParamList = {
+//     Review: { flashcardId: string };
+// };
 
-type ReviewScreenRouteProp = RouteProp<RootStackParamList, 'Review'>;
+// type ReviewScreenRouteProp = RouteProp<RootStackParamList, 'Review'>;
 
 export const ReviewScreen = () => {
-    const route = useRoute<ReviewScreenRouteProp>();
     const navigation = useNavigation();
+    const route = useRoute();
+    const { flashcardId } = route.params as { flashcardId: string };
     const queryClient = useQueryClient();
-    const { flashcardId } = route.params;
     const [showAnswer, setShowAnswer] = useState(false);
 
     // Find the flashcard from any material's cache
@@ -64,39 +65,39 @@ export const ReviewScreen = () => {
         <View style={styles.container}>
             <AppHeader />
             <View style={styles.contentContainer}>
-            <View style={styles.card}>
-                <Text style={styles.label}>Question</Text>
-                <Text style={styles.text}>{flashcard.question}</Text>
+                <View style={styles.card}>
+                    <Text style={styles.label}>Question</Text>
+                    <Text style={styles.text}>{flashcard.question}</Text>
 
-                {showAnswer && (
-                    <View style={styles.answerContainer}>
-                        <View style={styles.divider} />
-                        <Text style={styles.label}>Answer</Text>
-                        <Text style={styles.text}>{flashcard.answer}</Text>
-                    </View>
-                )}
-            </View>
-
-            {!showAnswer ? (
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => setShowAnswer(true)}
-                >
-                    <Text style={styles.buttonText}>Show Answer</Text>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    style={[styles.button, styles.completeButton]}
-                    onPress={() => mutation.mutate()}
-                    disabled={mutation.isPending}
-                >
-                    {mutation.isPending ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.buttonText}>Complete Review</Text>
+                    {showAnswer && (
+                        <View style={styles.answerContainer}>
+                            <View style={styles.divider} />
+                            <Text style={styles.label}>Answer</Text>
+                            <Text style={styles.text}>{flashcard.answer}</Text>
+                        </View>
                     )}
-                </TouchableOpacity>
-            )}
+                </View>
+
+                {!showAnswer ? (
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => setShowAnswer(true)}
+                    >
+                        <Text style={styles.buttonText}>Show Answer</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        style={[styles.button, styles.completeButton]}
+                        onPress={() => mutation.mutate()}
+                        disabled={mutation.isPending}
+                    >
+                        {mutation.isPending ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={styles.buttonText}>Complete Review</Text>
+                        )}
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );

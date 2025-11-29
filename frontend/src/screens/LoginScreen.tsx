@@ -1,76 +1,77 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Button } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import { ResponseType } from 'expo-auth-session';
+import { ResponseType, makeRedirectUri } from 'expo-auth-session';
 import { useAuthStore } from '../store/authStore';
 import { authClient } from '../services/api';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '../utils/config';
 
-WebBrowser.maybeCompleteAuthSession();
+// WebBrowser.maybeCompleteAuthSession();
 
 export const LoginScreen = () => {
     const { login } = useAuthStore();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: GOOGLE_WEB_CLIENT_ID,
-        iosClientId: GOOGLE_IOS_CLIENT_ID,
-        androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-        responseType: ResponseType.IdToken,
-        redirectUri: typeof window !== 'undefined' ? window.location.origin : undefined,
-    });
 
-    // Debug: Log the redirect URI being used
-    useEffect(() => {
-        if (request) {
-            console.log('[LOGIN] OAuth Request Config:', {
-                clientId: request.clientId,
-                redirectUri: request.redirectUri,
-                responseType: request.responseType,
-            });
-        }
-    }, [request]);
+    // Manual Auth Flow
+    const handleSignIn = async () => {
+        setError(null);
+        setIsLoggingIn(true);
+        try {
+            const redirectUri = makeRedirectUri();
+            console.log('[LOGIN] Redirect URI:', redirectUri);
 
-    useEffect(() => {
-        if (response?.type === 'success') {
-            console.log('[LOGIN] Google OAuth success');
-            console.log('[LOGIN] Full response:', JSON.stringify(response, null, 2));
-            console.log('[LOGIN] Response params:', response.params);
-            
-            // Try different possible locations for the ID token
-            const idToken = response.params?.id_token || 
-                           response.authentication?.idToken ||
-                           response.params?.idToken;
-            
-            if (idToken) {
-                console.log('[LOGIN] Found ID token, length:', idToken.length);
-                handleLogin(idToken);
+            // Use Web Client ID for the request as we are using a web flow
+            const clientId = GOOGLE_WEB_CLIENT_ID;
+            const scope = encodeURIComponent('openid profile email');
+            const responseType = 'id_token';
+            const nonce = Math.random().toString(36).substring(7);
+
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth` +
+                `?client_id=${clientId}` +
+                `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+                `&response_type=${responseType}` +
+                `&scope=${scope}` +
+                `&nonce=${nonce}`;
+
+            console.log('[LOGIN] Opening Auth Session...');
+            const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+            console.log('[LOGIN] Auth Session Result:', result);
+
+            if (result.type === 'success' && result.url) {
+                // Extract id_token from URL fragment
+                const url = new URL(result.url);
+                const fragment = url.hash.substring(1); // remove #
+                const params = new URLSearchParams(fragment);
+                const idToken = params.get('id_token');
+
+                if (idToken) {
+                    console.log('[LOGIN] Found ID token');
+                    handleLogin(idToken);
+                } else {
+                    setError('No ID token found in response');
+                    setIsLoggingIn(false);
+                }
             } else {
-                console.error('[LOGIN] No ID token in response');
-                console.error('[LOGIN] Available params keys:', Object.keys(response.params || {}));
-                setError('No ID token received from Google');
+                console.log('[LOGIN] Auth cancelled or failed');
                 setIsLoggingIn(false);
             }
-        } else if (response?.type === 'error') {
-            console.error('[LOGIN] OAuth error:', response.error);
-            setError(`Login failed: ${response.error?.message || 'Unknown error'}`);
-            setIsLoggingIn(false);
-        } else if (response?.type === 'cancel') {
-            console.log('[LOGIN] User cancelled OAuth');
+        } catch (error) {
+            console.error('[LOGIN] Error opening OAuth:', error);
+            setError('Failed to open login window: ' + (error instanceof Error ? error.message : String(error)));
             setIsLoggingIn(false);
         }
-    }, [response]);
+    };
 
     const handleLogin = async (idToken: string) => {
         setIsLoggingIn(true);
         setError(null);
-        
+
         try {
             console.log('[LOGIN] Sending ID token to backend...');
             const result = await authClient.login({ googleIdToken: idToken });
-            
+
             console.log('[LOGIN] Backend response received');
             if (result.user && result.sessionToken) {
                 console.log('[LOGIN] Login successful, user:', result.user.email);
@@ -87,18 +88,6 @@ export const LoginScreen = () => {
         }
     };
 
-    const handleSignIn = async () => {
-        setError(null);
-        setIsLoggingIn(true);
-        try {
-            await promptAsync();
-        } catch (error) {
-            console.error('[LOGIN] Error opening OAuth:', error);
-            setError('Failed to open login window');
-            setIsLoggingIn(false);
-        }
-    };
-
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Learn & Revise</Text>
@@ -106,14 +95,14 @@ export const LoginScreen = () => {
 
             {error && (
                 <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
+                    <Text style={styles.errorText}>{typeof error === 'string' ? error : JSON.stringify(error)}</Text>
                 </View>
             )}
 
             <TouchableOpacity
-                style={[styles.button, (!request || isLoggingIn) && styles.buttonDisabled]}
+                style={[styles.button, isLoggingIn && styles.buttonDisabled]}
                 onPress={handleSignIn}
-                disabled={!request || isLoggingIn}
+                disabled={isLoggingIn}
             >
                 {isLoggingIn ? (
                     <ActivityIndicator color="#fff" />
@@ -130,8 +119,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
         padding: 20,
+        backgroundColor: '#f5f5f5',
     },
     title: {
         fontSize: 32,
