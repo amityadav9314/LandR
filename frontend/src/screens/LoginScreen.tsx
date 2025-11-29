@@ -1,65 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Button, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { ResponseType, makeRedirectUri } from 'expo-auth-session';
+import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthStore } from '../store/authStore';
 import { authClient } from '../services/api';
-import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '../utils/config';
-
-// WebBrowser.maybeCompleteAuthSession();
+import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '../utils/config';
 
 export const LoginScreen = () => {
     const { login } = useAuthStore();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Manual Auth Flow
-    const handleSignIn = async () => {
+    // Configure Google Sign-In for native platforms
+    useEffect(() => {
+        if (Platform.OS !== 'web') {
+            GoogleSignin.configure({
+                webClientId: GOOGLE_WEB_CLIENT_ID,
+                offlineAccess: false,
+                forceCodeForRefreshToken: false,
+            });
+        }
+    }, []);
+
+    // Web Google Sign-In Flow (using WebBrowser)
+    const handleWebSignIn = async () => {
         setError(null);
         setIsLoggingIn(true);
         try {
-            const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-            // Wait, StoreClient is Expo Go. Standalone is Standalone.
-            // Actually, let's just check if hostUri exists. If hostUri exists, we are likely in Expo Go or Dev Client.
-            // But Dev Client supports custom schemes.
-            // Let's stick to appOwnership if it works, or just assume Expo Go if hostUri is present?
-
-            // Better check:
-            const isStoreClient = Constants.executionEnvironment === 'storeClient'; // Expo Go
-
-            let redirectUri;
-            let clientId;
-
-            if (isStoreClient) {
-                // Expo Go: Use Tunnel HTTPS
-                const hostUri = Constants.expoConfig?.hostUri;
-                redirectUri = hostUri ? `https://${hostUri}` : makeRedirectUri();
-                console.log('[LOGIN] Expo Go detected. Using Tunnel URL.');
-            } else {
-                // Production/EAS Build: Use Expo's Auth Proxy
-                // This works with Web Client ID and doesn't require custom scheme registration
-                redirectUri = makeRedirectUri({
-                    scheme: 'landr',
-                    path: 'redirect'
-                });
-                console.log('[LOGIN] Standalone/EAS Build detected. Using Expo Auth Proxy.');
-            }
-
+            console.log('[LOGIN] Starting web Google Sign-In...');
+            
+            const redirectUri = makeRedirectUri({
+                scheme: 'landr',
+                path: 'redirect'
+            });
+            
             console.log('[LOGIN] Redirect URI:', redirectUri);
-
-            // Use appropriate Client ID based on platform
-            if (Platform.OS === 'android') {
-                clientId = GOOGLE_ANDROID_CLIENT_ID;
-                console.log('[LOGIN] Using Android Client ID');
-            } else if (Platform.OS === 'ios') {
-                clientId = GOOGLE_IOS_CLIENT_ID;
-                console.log('[LOGIN] Using iOS Client ID');
-            } else {
-                clientId = GOOGLE_WEB_CLIENT_ID;
-                console.log('[LOGIN] Using Web Client ID');
-            }
+            
+            const clientId = GOOGLE_WEB_CLIENT_ID;
             const scope = encodeURIComponent('openid profile email');
             const responseType = 'id_token';
             const nonce = Math.random().toString(36).substring(7);
@@ -72,22 +51,18 @@ export const LoginScreen = () => {
                 `&nonce=${nonce}`;
 
             console.log('[LOGIN] Opening Auth Session...');
-            // Force Chrome to avoid "disallowed user agent" error
-            const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri, {
-                browserPackage: 'com.android.chrome'
-            });
+            const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
             console.log('[LOGIN] Auth Session Result:', result);
 
             if (result.type === 'success' && result.url) {
-                // Extract id_token from URL fragment
                 const url = new URL(result.url);
-                const fragment = url.hash.substring(1); // remove #
+                const fragment = url.hash.substring(1);
                 const params = new URLSearchParams(fragment);
                 const idToken = params.get('id_token');
 
                 if (idToken) {
                     console.log('[LOGIN] Found ID token');
-                    handleLogin(idToken);
+                    await handleLogin(idToken);
                 } else {
                     setError('No ID token found in response');
                     setIsLoggingIn(false);
@@ -97,9 +72,56 @@ export const LoginScreen = () => {
                 setIsLoggingIn(false);
             }
         } catch (error) {
-            console.error('[LOGIN] Error opening OAuth:', error);
+            console.error('[LOGIN] Web Sign-In error:', error);
             setError('Failed to open login window: ' + (error instanceof Error ? error.message : String(error)));
             setIsLoggingIn(false);
+        }
+    };
+
+    // Native Google Sign-In Flow (using GoogleSignin SDK)
+    const handleNativeSignIn = async () => {
+        setError(null);
+        setIsLoggingIn(true);
+        try {
+            console.log('[LOGIN] Starting native Google Sign-In...');
+            
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            console.log('[LOGIN] Sign-in successful, user:', userInfo.data?.user.email);
+            
+            const tokens = await GoogleSignin.getTokens();
+            const idToken = tokens.idToken;
+            
+            if (idToken) {
+                console.log('[LOGIN] Got ID token, sending to backend...');
+                await handleLogin(idToken);
+            } else {
+                setError('No ID token received from Google');
+                setIsLoggingIn(false);
+            }
+        } catch (error: any) {
+            console.error('[LOGIN] Native Sign-In error:', error);
+            
+            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+                setError('Sign-in was cancelled');
+            } else if (error.code === statusCodes.IN_PROGRESS) {
+                setError('Sign-in is already in progress');
+            } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+                setError('Google Play Services not available');
+            } else {
+                setError('Sign-in failed: ' + (error.message || 'Unknown error'));
+            }
+            
+            setIsLoggingIn(false);
+        }
+    };
+
+    // Main sign-in handler - routes to web or native based on platform
+    const handleSignIn = async () => {
+        if (Platform.OS === 'web') {
+            await handleWebSignIn();
+        } else {
+            await handleNativeSignIn();
         }
     };
 
