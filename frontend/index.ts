@@ -1,7 +1,8 @@
-import 'text-encoding';
-import 'react-native-fetch-api';
-import 'web-streams-polyfill/dist/polyfill';
+import { fetch } from 'expo/fetch';
 import { registerRootComponent } from 'expo';
+
+// Polyfill global fetch with Expo's implementation (supports streaming)
+global.fetch = fetch as any;
 
 import App from './App';
 
