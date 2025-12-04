@@ -13,26 +13,16 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.amityadav.landr",
-      "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification"
-        ]
-      }
+      "supportsTablet": true
     },
     "android": {
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": true,
       "package": "com.amityadav.landr",
-      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "SCHEDULE_EXACT_ALARM"
-      ]
+      }
     },
     "notification": {
       "icon": "./assets/icon.png",
@@ -48,8 +38,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "4782c64d-c1b3-4115-aaf3-60b516dcd34d"
+        "projectId": "c2d3cdab-4922-41f4-8b46-7b35a2fa32a8"
       }
-    }
+    },
+    "owner": "amityadav9314"
   }
 }
