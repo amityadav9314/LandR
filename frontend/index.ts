@@ -1,3 +1,6 @@
+import 'text-encoding';
+import 'react-native-fetch-api';
+import 'web-streams-polyfill/dist/polyfill';
 import { registerRootComponent } from 'expo';
 
 import App from './App';
