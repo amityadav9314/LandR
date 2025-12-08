@@ -58,6 +58,18 @@ export const useAuthStore = create<AuthState>((set) => ({
         queryClient.clear();
         await storage.deleteItem('auth_token');
         await storage.deleteItem('user_profile');
+
+        // Sign out from Google to show account picker on next login
+        if (Platform.OS !== 'web') {
+            try {
+                const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+                await GoogleSignin.signOut();
+                console.log('[AUTH] Signed out from Google');
+            } catch (error) {
+                console.warn('[AUTH] Failed to sign out from Google:', error);
+            }
+        }
+
         set({ user: null, token: null, isLoading: false });
     },
     restoreSession: async () => {

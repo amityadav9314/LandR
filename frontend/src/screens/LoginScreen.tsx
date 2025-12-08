@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform, Image } from 'react-native';
 import { GoogleSignin, statusCodes, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import * as WebBrowser from 'expo-web-browser';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
@@ -7,9 +7,11 @@ import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthStore } from '../store/authStore';
 import { authClient } from '../services/api';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '../utils/config';
+import { useTheme, ThemeColors } from '../utils/theme';
 
 export const LoginScreen = () => {
     const { login } = useAuthStore();
+    const { colors } = useTheme();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -24,20 +26,18 @@ export const LoginScreen = () => {
         }
     }, []);
 
-    // Web Google Sign-In Flow (using WebBrowser)
+    // Web Google Sign-In Flow
     const handleWebSignIn = async () => {
         setError(null);
         setIsLoggingIn(true);
         try {
             console.log('[LOGIN] Starting web Google Sign-In...');
-            
+
             const redirectUri = makeRedirectUri({
                 scheme: 'landr',
                 path: 'redirect'
             });
-            
-            console.log('[LOGIN] Redirect URI:', redirectUri);
-            
+
             const clientId = GOOGLE_WEB_CLIENT_ID;
             const scope = encodeURIComponent('openid profile email');
             const responseType = 'id_token';
@@ -50,9 +50,7 @@ export const LoginScreen = () => {
                 `&scope=${scope}` +
                 `&nonce=${nonce}`;
 
-            console.log('[LOGIN] Opening Auth Session...');
             const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-            console.log('[LOGIN] Auth Session Result:', result);
 
             if (result.type === 'success' && result.url) {
                 const url = new URL(result.url);
@@ -61,14 +59,12 @@ export const LoginScreen = () => {
                 const idToken = params.get('id_token');
 
                 if (idToken) {
-                    console.log('[LOGIN] Found ID token');
                     await handleLogin(idToken);
                 } else {
                     setError('No ID token found in response');
                     setIsLoggingIn(false);
                 }
             } else {
-                console.log('[LOGIN] Auth cancelled or failed');
                 setIsLoggingIn(false);
             }
         } catch (error) {
@@ -78,22 +74,21 @@ export const LoginScreen = () => {
         }
     };
 
-    // Native Google Sign-In Flow (using GoogleSignin SDK)
+    // Native Google Sign-In Flow
     const handleNativeSignIn = async () => {
         setError(null);
         setIsLoggingIn(true);
         try {
             console.log('[LOGIN] Starting native Google Sign-In...');
-            
+
             await GoogleSignin.hasPlayServices();
             const userInfo = await GoogleSignin.signIn();
             console.log('[LOGIN] Sign-in successful, user:', userInfo.data?.user.email);
-            
+
             const tokens = await GoogleSignin.getTokens();
             const idToken = tokens.idToken;
-            
+
             if (idToken) {
-                console.log('[LOGIN] Got ID token, sending to backend...');
                 await handleLogin(idToken);
             } else {
                 setError('No ID token received from Google');
@@ -101,7 +96,7 @@ export const LoginScreen = () => {
             }
         } catch (error: any) {
             console.error('[LOGIN] Native Sign-In error:', error);
-            
+
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
                 setError('Sign-in was cancelled');
             } else if (error.code === statusCodes.IN_PROGRESS) {
@@ -111,12 +106,11 @@ export const LoginScreen = () => {
             } else {
                 setError('Sign-in failed: ' + (error.message || 'Unknown error'));
             }
-            
+
             setIsLoggingIn(false);
         }
     };
 
-    // Main sign-in handler - routes to web or native based on platform
     const handleSignIn = async () => {
         if (Platform.OS === 'web') {
             await handleWebSignIn();
@@ -133,7 +127,6 @@ export const LoginScreen = () => {
             console.log('[LOGIN] Sending ID token to backend...');
             const result = await authClient.login({ googleIdToken: idToken });
 
-            console.log('[LOGIN] Backend response received');
             if (result.user && result.sessionToken) {
                 console.log('[LOGIN] Login successful, user:', result.user.email);
                 await login(result.user, result.sessionToken);
@@ -149,8 +142,20 @@ export const LoginScreen = () => {
         }
     };
 
+    const styles = createStyles(colors);
+
     return (
         <View style={styles.container}>
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+                <Image
+                    source={require('../../assets/icon.png')}
+                    style={styles.logoIcon}
+                    resizeMode="contain"
+                />
+                <Text style={[styles.logoText, { color: colors.primary }]}>LandR</Text>
+            </View>
+
             <Text style={styles.title}>Learn & Revise</Text>
             <Text style={styles.subtitle}>Master any topic with AI and Spaced Repetition</Text>
 
@@ -161,7 +166,7 @@ export const LoginScreen = () => {
             )}
 
             <GoogleSigninButton
-                style={{ width: 192, height: 48 }}
+                style={{ width: 280, height: 56 }}
                 size={GoogleSigninButton.Size.Wide}
                 color={GoogleSigninButton.Color.Dark}
                 onPress={handleSignIn}
@@ -171,40 +176,56 @@ export const LoginScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
+    },
+    logoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+        gap: 8,
+    },
+    logoIcon: {
+        width: 64,
+        height: 64,
+        borderRadius: 12,
+    },
+    logoText: {
+        fontSize: 42,
+        fontWeight: 'bold',
+        letterSpacing: 2,
     },
     title: {
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 10,
-        color: '#333',
+        color: colors.textPrimary,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 40,
         textAlign: 'center',
     },
     errorContainer: {
-        backgroundColor: '#fee',
+        backgroundColor: colors.errorBg,
         padding: 12,
         borderRadius: 8,
         marginBottom: 20,
         maxWidth: 400,
     },
     errorText: {
-        color: '#c00',
+        color: colors.error,
         fontSize: 14,
         textAlign: 'center',
     },
     button: {
-        backgroundColor: '#4285F4',
+        backgroundColor: colors.primary,
         paddingVertical: 12,
         paddingHorizontal: 24,
         borderRadius: 8,
@@ -213,10 +234,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     buttonDisabled: {
-        backgroundColor: '#aaa',
+        backgroundColor: colors.paginationDisabledBg,
     },
     buttonText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontSize: 16,
         fontWeight: '600',
     },

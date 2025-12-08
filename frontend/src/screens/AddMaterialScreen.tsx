@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-// import { useNavigation } from '@react-navigation/native';
 import { useNavigation } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
+import { useTheme, ThemeColors } from '../utils/theme';
 
 export const AddMaterialScreen = () => {
     const navigation = useNavigation();
     const queryClient = useQueryClient();
+    const { colors } = useTheme();
     const [content, setContent] = useState('');
     const [type, setType] = useState<'TEXT' | 'LINK'>('TEXT');
 
@@ -21,17 +22,11 @@ export const AddMaterialScreen = () => {
         },
         onSuccess: (data) => {
             console.log('[ADD_MATERIAL] Success! Created flashcards:', data.flashcardsCreated);
-            console.log('[ADD_MATERIAL] Material title:', data.title);
-            console.log('[ADD_MATERIAL] Tags:', data.tags);
-
             Alert.alert('Success', `Created ${data.flashcardsCreated} flashcards for "${data.title}"!`);
-
-            // Invalidate and refetch all queries to refresh the UI
             queryClient.invalidateQueries({ queryKey: ['dueMaterials'], refetchType: 'all' });
             queryClient.invalidateQueries({ queryKey: ['dueFlashcards'], refetchType: 'all' });
             queryClient.invalidateQueries({ queryKey: ['allTags'], refetchType: 'all' });
             queryClient.invalidateQueries({ queryKey: ['notificationStatus'], refetchType: 'all' });
-
             navigation.goBack();
         },
         onError: (error) => {
@@ -47,6 +42,8 @@ export const AddMaterialScreen = () => {
         }
         mutation.mutate();
     };
+
+    const styles = createStyles(colors);
 
     return (
         <View style={styles.container}>
@@ -72,6 +69,7 @@ export const AddMaterialScreen = () => {
                 <TextInput
                     style={styles.input}
                     placeholder={type === 'TEXT' ? "Paste your text here..." : "Enter URL here..."}
+                    placeholderTextColor={colors.textPlaceholder}
                     multiline={type === 'TEXT'}
                     numberOfLines={type === 'TEXT' ? 10 : 1}
                     value={content}
@@ -85,7 +83,7 @@ export const AddMaterialScreen = () => {
                     disabled={mutation.isPending}
                 >
                     {mutation.isPending ? (
-                        <ActivityIndicator color="#fff" />
+                        <ActivityIndicator color={colors.textInverse} />
                     ) : (
                         <Text style={styles.submitText}>Generate Flashcards</Text>
                     )}
@@ -95,26 +93,26 @@ export const AddMaterialScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     contentContainer: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#333',
+        color: colors.textPrimary,
     },
     typeContainer: {
         flexDirection: 'row',
         marginBottom: 20,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: colors.cardAlt,
         borderRadius: 8,
         padding: 4,
     },
@@ -125,34 +123,35 @@ const styles = StyleSheet.create({
         borderRadius: 6,
     },
     activeType: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         elevation: 2,
     },
     typeText: {
         fontWeight: '600',
-        color: '#666',
+        color: colors.textSecondary,
     },
     activeTypeText: {
-        color: '#4285F4',
+        color: colors.primary,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         padding: 15,
         fontSize: 16,
         marginBottom: 20,
         minHeight: 100,
-        backgroundColor: '#fafafa',
+        backgroundColor: colors.input,
+        color: colors.textPrimary,
     },
     submitButton: {
-        backgroundColor: '#4285F4',
+        backgroundColor: colors.primary,
         paddingVertical: 15,
         borderRadius: 8,
         alignItems: 'center',
     },
     submitText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontSize: 16,
         fontWeight: 'bold',
     },

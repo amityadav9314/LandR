@@ -1,27 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-// import { useNavigation } from '@react-navigation/native';
-// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { MaterialSummary } from '../../proto/backend/proto/learning/learning';
 import { MATERIALS_PER_PAGE } from '../utils/constants';
 import { AppHeader } from '../components/AppHeader';
-
-// Define navigation types (Simplified for manual router)
-// type RootStackParamList = {
-//     Home: undefined;
-//     AddMaterial: undefined;
-//     MaterialDetail: { materialId: string; title: string };
-// };
-
-// type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+import { useTheme, ThemeColors } from '../utils/theme';
 
 export const HomeScreen = () => {
     const navigation = useNavigation();
     const { user } = useAuthStore();
+    const { colors } = useTheme();
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
@@ -63,12 +54,12 @@ export const HomeScreen = () => {
                 return { dueFlashcardsCount: 0, hasDueMaterials: false };
             }
         },
-        refetchInterval: 60000, // Refetch every minute
+        refetchInterval: 60000,
     });
 
     const dueFlashcardsCount = notificationData?.dueFlashcardsCount || 0;
 
-    // Fetch all tags from backend (works with pagination!)
+    // Fetch all tags from backend
     const { data: tagsData } = useQuery({
         queryKey: ['allTags'],
         queryFn: async () => {
@@ -86,19 +77,15 @@ export const HomeScreen = () => {
 
     const allTags = tagsData || [];
 
-    // Filter materials based on search and selected tags (client-side filtering)
+    // Filter materials based on search and selected tags
     const filteredMaterials = useMemo(() => {
         if (!data) return [];
 
         return data.filter((material: MaterialSummary) => {
-            // Filter by search query (title contains)
             const matchesSearch = searchQuery.trim() === '' ||
                 material.title.toLowerCase().includes(searchQuery.toLowerCase());
-
-            // Filter by selected tags (material must have ALL selected tags)
             const matchesTags = selectedTags.length === 0 ||
                 selectedTags.every(tag => material.tags.includes(tag));
-
             return matchesSearch && matchesTags;
         });
     }, [data, searchQuery, selectedTags]);
@@ -140,61 +127,8 @@ export const HomeScreen = () => {
         }
     }, [refetch, refreshing]);
 
-    // Web-compatible pull-to-refresh
-    const scrollViewRef = React.useRef<any>(null);
-    const [pullDistance, setPullDistance] = React.useState(0);
-    const touchStartY = React.useRef(0);
-    const scrollY = React.useRef(0);
-
-    const handleTouchStart = (e: any) => {
-        const y = e.nativeEvent.pageY || e.nativeEvent.clientY || (e.nativeEvent.touches && e.nativeEvent.touches[0]?.pageY) || 0;
-        touchStartY.current = y;
-    };
-
-    const handleTouchMove = (e: any) => {
-        if (scrollY.current <= 0) {
-            const currentY = e.nativeEvent.pageY || e.nativeEvent.clientY || (e.nativeEvent.touches && e.nativeEvent.touches[0]?.pageY) || 0;
-            const distance = currentY - touchStartY.current;
-            if (distance > 0) {
-                setPullDistance(distance);
-            }
-        }
-    };
-
-    const handleTouchEnd = () => {
-        if (pullDistance > 80 && !refreshing) {
-            handleRefresh();
-        }
-        setPullDistance(0);
-    };
-
-    const handleScroll = (e: any) => {
-        scrollY.current = e.nativeEvent.contentOffset.y;
-    };
-
-    const renderItem = ({ item }: { item: MaterialSummary }) => (
-        <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('MaterialDetail', { materialId: item.id, title: item.title })}
-        >
-            <View style={styles.cardHeader}>
-                <Text style={styles.materialTitle}>{item.title}</Text>
-                <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{item.dueCount}</Text>
-                </View>
-            </View>
-
-            <View style={styles.tagsContainer}>
-                {item.tags.map((tag, index) => (
-                    <View key={index} style={styles.tagBadge}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                    </View>
-                ))}
-            </View>
-        </TouchableOpacity>
-    );
-
     const hasActiveFilters = searchQuery.trim() !== '' || selectedTags.length > 0;
+    const styles = createStyles(colors);
 
     const renderPaginationFooter = () => {
         if (hasActiveFilters || totalPages <= 1) return null;
@@ -233,39 +167,19 @@ export const HomeScreen = () => {
             <AppHeader />
 
             <ScrollView
-                ref={scrollViewRef}
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={true}
-                scrollEventThrottle={16}
-                onScroll={handleScroll}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={handleRefresh}
-                        colors={['#4285F4']}
-                        tintColor="#4285F4"
-                        progressBackgroundColor="#ffffff"
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                        progressBackgroundColor={colors.card}
                     />
                 }
             >
-                {/* Pull indicator */}
-                {pullDistance > 0 && (
-                    <View style={{
-                        height: Math.min(pullDistance, 80),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: '#f0f0f0'
-                    }}>
-                        <Text style={{ color: '#4285F4', fontSize: 14 }}>
-                            {pullDistance > 80 ? '↓ Release to refresh' : '↓ Pull to refresh'}
-                        </Text>
-                    </View>
-                )}
-
                 <View style={styles.header}>
                     <Text style={styles.title}>Welcome, {user?.name}</Text>
                 </View>
@@ -292,6 +206,7 @@ export const HomeScreen = () => {
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search by title..."
+                        placeholderTextColor={colors.textPlaceholder}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         clearButtonMode="while-editing"
@@ -347,7 +262,12 @@ export const HomeScreen = () => {
                     )}
                 </View>
 
-                {error ? (
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                        <Text style={styles.loadingText}>Loading materials...</Text>
+                    </View>
+                ) : error ? (
                     <Text style={styles.error}>Failed to load materials</Text>
                 ) : filteredMaterials.length === 0 ? (
                     <Text style={styles.empty}>
@@ -387,10 +307,10 @@ export const HomeScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     scrollView: {
         flex: 1,
@@ -407,7 +327,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.textPrimary,
     },
     titleRow: {
         flexDirection: 'row',
@@ -423,10 +343,10 @@ const styles = StyleSheet.create({
     mainTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.textPrimary,
     },
     notificationBadge: {
-        backgroundColor: '#ff4444',
+        backgroundColor: colors.notificationBadgeBg,
         borderRadius: 12,
         paddingHorizontal: 8,
         paddingVertical: 4,
@@ -435,12 +355,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     notificationBadgeText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontSize: 12,
         fontWeight: 'bold',
     },
     addButton: {
-        backgroundColor: '#4285F4',
+        backgroundColor: colors.primary,
         paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 8,
@@ -451,7 +371,7 @@ const styles = StyleSheet.create({
         shadowRadius: 1.41,
     },
     addButtonText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontWeight: '600',
         fontSize: 14,
     },
@@ -463,22 +383,23 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 8,
         paddingHorizontal: 15,
         paddingVertical: 12,
         fontSize: 16,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.inputBorder,
+        color: colors.textPrimary,
     },
     clearButton: {
-        backgroundColor: '#d9534f',
+        backgroundColor: colors.error,
         paddingHorizontal: 15,
         paddingVertical: 12,
         borderRadius: 8,
     },
     clearButtonText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontWeight: '600',
         fontSize: 14,
     },
@@ -488,7 +409,7 @@ const styles = StyleSheet.create({
     tagFilterLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     tagFilterContainer: {
@@ -497,35 +418,46 @@ const styles = StyleSheet.create({
         paddingBottom: 5,
     },
     filterTagChip: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.filterChipBg,
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 16,
         borderWidth: 1.5,
-        borderColor: '#ddd',
+        borderColor: colors.filterChipBorder,
     },
     filterTagChipActive: {
-        backgroundColor: '#4285F4',
-        borderColor: '#4285F4',
+        backgroundColor: colors.tagActiveBg,
+        borderColor: colors.tagActiveBg,
     },
     filterTagText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#666',
+        color: colors.textSecondary,
     },
     filterTagTextActive: {
-        color: '#fff',
+        color: colors.tagActiveText,
     },
     infoContainer: {
         marginBottom: 10,
     },
     resultsCount: {
         fontSize: 13,
-        color: '#666',
+        color: colors.textSecondary,
         fontStyle: 'italic',
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 16,
+        color: colors.textSecondary,
+    },
     card: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
@@ -544,18 +476,18 @@ const styles = StyleSheet.create({
     materialTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#333',
+        color: colors.textPrimary,
         flex: 1,
     },
     badge: {
-        backgroundColor: '#4285F4',
+        backgroundColor: colors.badgeBg,
         borderRadius: 12,
         paddingHorizontal: 8,
         paddingVertical: 2,
         marginLeft: 10,
     },
     badgeText: {
-        color: '#fff',
+        color: colors.badgeText,
         fontWeight: 'bold',
         fontSize: 12,
     },
@@ -565,23 +497,23 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     tagBadge: {
-        backgroundColor: '#e0e0e0',
+        backgroundColor: colors.tagBg,
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 12,
     },
     tagText: {
         fontSize: 12,
-        color: '#555',
+        color: colors.tagText,
     },
     error: {
-        color: 'red',
+        color: colors.error,
         textAlign: 'center',
         marginTop: 20,
     },
     empty: {
         textAlign: 'center',
-        color: '#888',
+        color: colors.textSecondary,
         marginTop: 50,
         fontStyle: 'italic',
     },
@@ -591,9 +523,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 15,
         paddingHorizontal: 20,
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderTopWidth: 1,
-        borderTopColor: '#ddd',
+        borderTopColor: colors.border,
         marginTop: 10,
         marginBottom: 10,
         borderRadius: 10,
@@ -604,7 +536,7 @@ const styles = StyleSheet.create({
         shadowRadius: 1.41,
     },
     paginationButton: {
-        backgroundColor: '#4285F4',
+        backgroundColor: colors.primary,
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
@@ -612,19 +544,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     paginationButtonDisabled: {
-        backgroundColor: '#ccc',
+        backgroundColor: colors.paginationDisabledBg,
     },
     paginationButtonText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontWeight: '600',
         fontSize: 14,
     },
     paginationButtonTextDisabled: {
-        color: '#999',
+        color: colors.paginationDisabledText,
     },
     paginationText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
+        color: colors.textPrimary,
     },
 });

@@ -31,7 +31,15 @@
       "androidCollapsedTitle": "LandR Notifications"
     },
     "plugins": [
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#4285F4",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { Flashcard } from '../../proto/backend/proto/learning/learning';
 import { AppHeader } from '../components/AppHeader';
-
-// type RootStackParamList = {
-//     Review: { flashcardId: string };
-// };
-
-// type ReviewScreenRouteProp = RouteProp<RootStackParamList, 'Review'>;
+import { useTheme, ThemeColors } from '../utils/theme';
 
 export const ReviewScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { flashcardId } = route.params as { flashcardId: string };
     const queryClient = useQueryClient();
+    const { colors } = useTheme();
     const [showAnswer, setShowAnswer] = useState(false);
 
     // Find the flashcard from any material's cache
@@ -50,12 +45,14 @@ export const ReviewScreen = () => {
         },
     });
 
+    const styles = createStyles(colors);
+
     if (!flashcard) {
         return (
             <View style={styles.container}>
                 <AppHeader />
                 <View style={styles.center}>
-                    <Text>Flashcard not found</Text>
+                    <Text style={styles.notFoundText}>Flashcard not found</Text>
                 </View>
             </View>
         );
@@ -92,7 +89,7 @@ export const ReviewScreen = () => {
                         disabled={mutation.isPending}
                     >
                         {mutation.isPending ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color={colors.textInverse} />
                         ) : (
                             <Text style={styles.buttonText}>Complete Review</Text>
                         )}
@@ -103,10 +100,10 @@ export const ReviewScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     contentContainer: {
         flex: 1,
@@ -118,8 +115,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    notFoundText: {
+        color: colors.textSecondary,
+        fontSize: 16,
+    },
     card: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 30,
         borderRadius: 15,
         elevation: 4,
@@ -133,14 +134,14 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        color: '#888',
+        color: colors.textSecondary,
         marginBottom: 10,
         textTransform: 'uppercase',
         fontWeight: 'bold',
     },
     text: {
         fontSize: 22,
-        color: '#333',
+        color: colors.textPrimary,
         textAlign: 'center',
         lineHeight: 30,
     },
@@ -149,21 +150,21 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: '#eee',
+        backgroundColor: colors.divider,
         marginVertical: 20,
     },
     button: {
-        backgroundColor: '#4285F4',
+        backgroundColor: colors.primary,
         paddingVertical: 15,
         borderRadius: 30,
         alignItems: 'center',
         elevation: 2,
     },
     completeButton: {
-        backgroundColor: '#34A853',
+        backgroundColor: colors.success,
     },
     buttonText: {
-        color: '#fff',
+        color: colors.textInverse,
         fontSize: 18,
         fontWeight: 'bold',
     },

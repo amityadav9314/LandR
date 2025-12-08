@@ -15,6 +15,7 @@ import { ReviewScreen } from './src/screens/ReviewScreen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationProvider, useNavigation } from './src/navigation/ManualRouter';
+import { ThemeProvider, useTheme } from './src/utils/theme';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +52,7 @@ function AppContent() {
   useEffect(() => {
     // Initialize notifications when user is logged in
     if (user) {
-      // NotificationService.initialize();
+      NotificationService.initialize();
     }
   }, [user]);
 
@@ -80,7 +81,9 @@ function AppContent() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

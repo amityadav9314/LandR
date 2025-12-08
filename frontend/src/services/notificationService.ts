@@ -7,13 +7,23 @@ export class NotificationService {
     private static notificationIdentifier: string | null = null;
     private static isConfigured = false;
 
-    private static configure() {
+    private static async configure() {
         if (this.isConfigured) return;
 
         try {
+            // Set up Android notification channel (required for Android 8+)
+            if (Platform.OS === 'android') {
+                await Notifications.setNotificationChannelAsync('default', {
+                    name: 'LandR Notifications',
+                    importance: Notifications.AndroidImportance.HIGH,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: '#4285F4',
+                });
+                console.log('[Notifications] Android notification channel created');
+            }
+
             Notifications.setNotificationHandler({
                 handleNotification: async () => ({
-                    shouldShowAlert: true,
                     shouldPlaySound: true,
                     shouldSetBadge: true,
                     shouldShowBanner: true,
@@ -62,6 +72,20 @@ export class NotificationService {
                 await Notifications.cancelScheduledNotificationAsync(this.notificationIdentifier);
             }
 
+            // Use platform-specific trigger (CALENDAR not supported on Android)
+            const trigger = Platform.OS === 'android'
+                ? {
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY as const,
+                    hour: 9,
+                    minute: 0,
+                }
+                : {
+                    type: Notifications.SchedulableTriggerInputTypes.CALENDAR as const,
+                    hour: 9,
+                    minute: 0,
+                    repeats: true,
+                };
+
             // Schedule daily notification at 9 AM
             this.notificationIdentifier = await Notifications.scheduleNotificationAsync({
                 content: {
@@ -69,12 +93,7 @@ export class NotificationService {
                     body: 'You have flashcards due for review. Keep up your learning streak!',
                     data: { type: 'daily_reminder' },
                 },
-                trigger: {
-                    type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-                    hour: 9,
-                    minute: 0,
-                    repeats: true,
-                },
+                trigger,
             });
 
             console.log('[Notifications] Daily notification scheduled');
@@ -141,7 +160,7 @@ export class NotificationService {
      */
     static async initialize(): Promise<void> {
         try {
-            this.configure();
+            await this.configure();
             const hasPermission = await this.requestPermissions();
 
             if (hasPermission) {

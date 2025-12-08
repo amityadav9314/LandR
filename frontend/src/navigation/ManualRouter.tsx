@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Platform } from 'react-native';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { Platform, BackHandler } from 'react-native';
 
 type ScreenName = 'Login' | 'Home' | 'AddMaterial' | 'MaterialDetail' | 'Review';
 
@@ -17,8 +17,26 @@ export const NavigationProvider = ({ children }: { children: ReactNode }) => {
     const [stack, setStack] = useState<{ screen: ScreenName; params: any }[]>([{ screen: 'Home', params: {} }]);
 
     const current = stack[stack.length - 1];
+    const canGoBack = stack.length > 1;
 
-    // Handle Browser Back Button
+    // Handle Android Hardware Back Button
+    useEffect(() => {
+        if (Platform.OS === 'android') {
+            const onBackPress = () => {
+                if (stack.length > 1) {
+                    // If we can go back in our navigation stack, do so
+                    setStack(prev => prev.slice(0, -1));
+                    return true; // Prevent default behavior (exit app)
+                }
+                return false; // Let default behavior happen (exit app)
+            };
+
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+            return () => subscription.remove();
+        }
+    }, [stack.length]);
+
+    // Handle Browser Back Button (Web only)
     useEffect(() => {
         if (Platform.OS === 'web') {
             const onPopState = (event: PopStateEvent) => {
@@ -65,8 +83,6 @@ export const NavigationProvider = ({ children }: { children: ReactNode }) => {
             return prev;
         });
     };
-
-    const canGoBack = stack.length > 1;
 
     return (
         <NavigationContext.Provider value={{ currentScreen: current.screen, params: current.params, navigate, goBack, canGoBack }}>

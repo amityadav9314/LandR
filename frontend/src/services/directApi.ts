@@ -178,8 +178,8 @@ export const learningClient = {
         );
     },
 
-    async getDueMaterials(): Promise<GetDueMaterialsResponse> {
-        const req = GetDueMaterialsRequest.fromPartial({});
+    async getDueMaterials(request: Partial<GetDueMaterialsRequest>): Promise<GetDueMaterialsResponse> {
+        const req = GetDueMaterialsRequest.fromPartial(request);
         return grpcRequest(
             '/learning.LearningService/GetDueMaterials',
             req,
