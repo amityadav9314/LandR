@@ -1,4 +1,4 @@
-.PHONY: help build build-backend build-frontend start start-backend start-frontend stop clean clean-backend clean-frontend verify-frontend run-android
+.PHONY: help build build-backend build-frontend start start-backend start-frontend stop clean clean-backend clean-frontend verify-frontend run-android apk apk-debug
 
 # Variables
 BACKEND_DIR := backend
@@ -14,6 +14,9 @@ help:
 	@echo "  make start          - Start both backend and frontend servers in new windows"
 	@echo "  make stop           - Stop all running servers"
 	@echo "  make clean          - Clean build artifacts"
+	@echo "  make proto          - Generate proto files for Go and TypeScript"
+	@echo "  make apk            - Build release APK locally"
+	@echo "  make apk-debug      - Build debug APK locally (faster)"
 	@echo ""
 
 # Build
@@ -88,3 +91,23 @@ verify-frontend:
 # Run Android app
 run-android:
 	cd $(FRONTEND_DIR) && npm run android
+
+# Build Android APK locally
+apk:
+	@echo "Building Android APK..."
+	@echo "Step 1: Running expo prebuild..."
+	cd $(FRONTEND_DIR) && npx expo prebuild --platform android --clean
+	@echo "Step 2: Building release APK with Gradle..."
+	cd $(FRONTEND_DIR)/android && ./gradlew assembleRelease
+	@echo ""
+	@echo "✅ APK built successfully!"
+	@echo "📦 Location: $(FRONTEND_DIR)/android/app/build/outputs/apk/release/app-release.apk"
+
+# Build debug APK (faster, for testing)
+apk-debug:
+	@echo "Building debug APK..."
+	cd $(FRONTEND_DIR) && npx expo prebuild --platform android --clean
+	cd $(FRONTEND_DIR)/android && ./gradlew assembleDebug
+	@echo ""
+	@echo "✅ Debug APK built!"
+	@echo "📦 Location: $(FRONTEND_DIR)/android/app/build/outputs/apk/debug/app-debug.apk"
