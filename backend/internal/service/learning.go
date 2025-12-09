@@ -77,7 +77,7 @@ func (s *LearningService) GetDueMaterials(ctx context.Context, req *learning.Get
 		log.Printf("[GetDueMaterials] ERROR: Failed to get user ID: %v", err)
 		return nil, err
 	}
-	
+
 	// Set default values if not provided
 	page := req.Page
 	if page < 1 {
@@ -87,7 +87,7 @@ func (s *LearningService) GetDueMaterials(ctx context.Context, req *learning.Get
 	if pageSize < 1 {
 		pageSize = 10 // Default page size
 	}
-	
+
 	log.Printf("[GetDueMaterials] Fetching materials for userID: %s, page: %d, pageSize: %d", userID, page, pageSize)
 
 	materials, totalCount, err := s.core.GetDueMaterials(ctx, userID, page, pageSize)
@@ -98,7 +98,7 @@ func (s *LearningService) GetDueMaterials(ctx context.Context, req *learning.Get
 
 	// Calculate total pages
 	totalPages := (totalCount + pageSize - 1) / pageSize
-	
+
 	log.Printf("[GetDueMaterials] SUCCESS - Found %d materials (page %d/%d, total: %d)", len(materials), page, totalPages, totalCount)
 	return &learning.GetDueMaterialsResponse{
 		Materials:  materials,
@@ -128,7 +128,7 @@ func (s *LearningService) GetAllTags(ctx context.Context, _ *emptypb.Empty) (*le
 		log.Printf("[GetAllTags] ERROR: Failed to get user ID: %v", err)
 		return nil, err
 	}
-	
+
 	log.Printf("[GetAllTags] Fetching all tags for userID: %s", userID)
 
 	tags, err := s.core.GetAllTags(ctx, userID)
@@ -150,7 +150,7 @@ func (s *LearningService) GetNotificationStatus(ctx context.Context, _ *emptypb.
 		log.Printf("[GetNotificationStatus] ERROR: Failed to get user ID: %v", err)
 		return nil, err
 	}
-	
+
 	log.Printf("[GetNotificationStatus] Fetching notification status for userID: %s", userID)
 
 	count, hasDue, err := s.core.GetNotificationStatus(ctx, userID)
@@ -163,5 +163,28 @@ func (s *LearningService) GetNotificationStatus(ctx context.Context, _ *emptypb.
 	return &learning.NotificationStatusResponse{
 		DueFlashcardsCount: count,
 		HasDueMaterials:    hasDue,
+	}, nil
+}
+
+func (s *LearningService) GetMaterialSummary(ctx context.Context, req *learning.GetMaterialSummaryRequest) (*learning.GetMaterialSummaryResponse, error) {
+	// Extract user ID from context (set by auth interceptor)
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		log.Printf("[GetMaterialSummary] ERROR: Failed to get user ID: %v", err)
+		return nil, err
+	}
+
+	log.Printf("[GetMaterialSummary] Fetching summary for materialID: %s, userID: %s", req.MaterialId, userID)
+
+	summary, title, err := s.core.GetMaterialSummary(ctx, userID, req.MaterialId)
+	if err != nil {
+		log.Printf("[GetMaterialSummary] ERROR: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get material summary: %v", err)
+	}
+
+	log.Printf("[GetMaterialSummary] SUCCESS - Summary length: %d", len(summary))
+	return &learning.GetMaterialSummaryResponse{
+		Summary: summary,
+		Title:   title,
 	}, nil
 }

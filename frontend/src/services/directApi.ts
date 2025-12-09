@@ -11,7 +11,8 @@ import {
     AddMaterialRequest, AddMaterialResponse,
     GetDueMaterialsRequest, GetDueMaterialsResponse,
     GetDueFlashcardsRequest, FlashcardList,
-    CompleteReviewRequest, GetAllTagsResponse, NotificationStatusResponse
+    CompleteReviewRequest, GetAllTagsResponse, NotificationStatusResponse,
+    GetMaterialSummaryRequest, GetMaterialSummaryResponse
 } from '../../proto/backend/proto/learning/learning';
 import { Empty } from '../../proto/backend/google/protobuf/empty';
 import { API_URL } from '../utils/config';
@@ -223,6 +224,16 @@ export const learningClient = {
             {},
             () => new Uint8Array(0), // Empty request
             (data) => NotificationStatusResponse.decode(data),
+        );
+    },
+
+    async getMaterialSummary(request: Partial<GetMaterialSummaryRequest>): Promise<GetMaterialSummaryResponse> {
+        const req = GetMaterialSummaryRequest.fromPartial(request);
+        return grpcRequest(
+            '/learning.LearningService/GetMaterialSummary',
+            req,
+            (r) => GetMaterialSummaryRequest.encode(r).finish(),
+            (data) => GetMaterialSummaryResponse.decode(data),
         );
     },
 };

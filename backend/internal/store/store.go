@@ -30,6 +30,10 @@ type Store interface {
 	GetDueFlashcardsCount(ctx context.Context, userID string) (int32, error)
 	UpdateFlashcard(ctx context.Context, id string, stage int32, nextReviewAt time.Time) error
 
+	// Material Summary
+	GetMaterialContent(ctx context.Context, userID, materialID string) (content string, summary string, title string, err error)
+	UpdateMaterialSummary(ctx context.Context, materialID, summary string) error
+
 	// General
 	Close()
 }

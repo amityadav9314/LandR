@@ -111,3 +111,18 @@ apk-debug:
 	@echo ""
 	@echo "✅ Debug APK built!"
 	@echo "📦 Location: $(FRONTEND_DIR)/android/app/build/outputs/apk/debug/app-debug.apk"
+
+# Stop servers (Linux)
+stop-backend:
+	@echo "Stopping backend..."
+	@pkill -f "go run cmd/server/main.go" 2>/dev/null || echo "Backend not running"
+	@pkill -f "bin/server" 2>/dev/null || true
+
+stop-frontend:
+	@echo "Stopping frontend..."
+	@pkill -f "expo start" 2>/dev/null || echo "Frontend not running"
+	@pkill -f "react-native" 2>/dev/null || true
+	@pkill -f "metro" 2>/dev/null || true
+
+stop: stop-backend stop-frontend
+	@echo "All servers stopped."

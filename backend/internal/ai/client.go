@@ -156,3 +156,84 @@ func cleanJSON(s string) string {
 	s = strings.TrimSuffix(s, "```")
 	return s
 }
+
+// GenerateSummary sends content to Groq and returns a concise summary.
+func (c *Client) GenerateSummary(content string) (string, error) {
+	log.Printf("[AI] Starting summary generation, content length: %d", len(content))
+
+	// Truncate content if too long to stay within token limits
+	maxLen := 8000
+	if len(content) > maxLen {
+		content = content[:maxLen]
+	}
+
+	prompt := fmt.Sprintf(`
+		You are a helpful assistant that creates concise summaries for learning materials.
+		Create a clear, well-structured summary of the following text that helps a student review the key concepts.
+		The summary should:
+		- Be 3-5 paragraphs
+		- Highlight the main concepts and key points
+		- Be easy to scan and review quickly
+		- Use bullet points where appropriate
+
+		Return ONLY the summary text, no additional formatting or metadata.
+
+		Text:
+		%s
+		`, content)
+
+	reqBody := chatRequest{
+		Model: "openai/gpt-oss-120b",
+		Messages: []message{
+			{Role: "user", Content: prompt},
+		},
+	}
+
+	log.Printf("[AI] Using model: %s for summary", reqBody.Model)
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		log.Printf("[AI] Failed to marshal request: %v", err)
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", c.baseURL, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		log.Printf("[AI] Failed to create HTTP request: %v", err)
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+
+	log.Printf("[AI] Sending summary request to Groq API...")
+	resp, err := c.client.Do(req)
+	if err != nil {
+		log.Printf("[AI] HTTP request failed: %v", err)
+		return "", fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	log.Printf("[AI] Received response with status: %d", resp.StatusCode)
+
+	if resp.StatusCode != 200 {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		log.Printf("[AI] API error response: %s", string(bodyBytes))
+		return "", fmt.Errorf("api error: %d %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var chatResp chatResponse
+	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
+		log.Printf("[AI] Failed to decode response: %v", err)
+		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if len(chatResp.Choices) == 0 {
+		log.Printf("[AI] No choices returned in response")
+		return "", fmt.Errorf("no choices returned")
+	}
+
+	summary := strings.TrimSpace(chatResp.Choices[0].Message.Content)
+	log.Printf("[AI] Summary generated, length: %d", len(summary))
+	return summary, nil
+}

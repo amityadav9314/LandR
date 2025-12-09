@@ -12,6 +12,7 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { AddMaterialScreen } from './src/screens/AddMaterialScreen';
 import { MaterialDetailScreen } from './src/screens/MaterialDetailScreen';
 import { ReviewScreen } from './src/screens/ReviewScreen';
+import { SummaryScreen } from './src/screens/SummaryScreen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationProvider, useNavigation } from './src/navigation/ManualRouter';
@@ -38,6 +39,7 @@ const ScreenRenderer = () => {
     case 'AddMaterial': return <AddMaterialScreen />;
     case 'MaterialDetail': return <MaterialDetailScreen />;
     case 'Review': return <ReviewScreen />;
+    case 'Summary': return <SummaryScreen />;
     default: return <HomeScreen />;
   }
 };

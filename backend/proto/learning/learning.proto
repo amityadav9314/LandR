@@ -14,6 +14,7 @@ service LearningService {
   rpc CompleteReview(CompleteReviewRequest) returns (google.protobuf.Empty);
   rpc GetAllTags(google.protobuf.Empty) returns (GetAllTagsResponse);
   rpc GetNotificationStatus(google.protobuf.Empty) returns (NotificationStatusResponse);
+  rpc GetMaterialSummary(GetMaterialSummaryRequest) returns (GetMaterialSummaryResponse);
 }
 
 message AddMaterialRequest {
@@ -78,4 +79,13 @@ message GetAllTagsResponse {
 message NotificationStatusResponse {
   int32 due_flashcards_count = 1;
   bool has_due_materials = 2;
+}
+
+message GetMaterialSummaryRequest {
+  string material_id = 1;
+}
+
+message GetMaterialSummaryResponse {
+  string summary = 1;
+  string title = 2;
 }

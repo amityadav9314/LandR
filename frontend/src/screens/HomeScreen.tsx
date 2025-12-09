@@ -281,7 +281,7 @@ export const HomeScreen = () => {
                             <TouchableOpacity
                                 key={item.id}
                                 style={styles.card}
-                                onPress={() => navigation.navigate('MaterialDetail', { materialId: item.id, title: item.title })}
+                                onPress={() => navigation.navigate('Summary', { materialId: item.id, title: item.title })}
                             >
                                 <View style={styles.cardHeader}>
                                     <Text style={styles.materialTitle}>{item.title}</Text>

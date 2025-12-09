@@ -127,14 +127,14 @@ func (c *LearningCore) GetDueMaterials(ctx context.Context, userID string, page,
 
 func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) error {
 	log.Printf("[Core.CompleteReview] Updating flashcard: %s", flashcardID)
-	
+
 	// Fetch the current flashcard to get its stage
 	card, err := c.store.GetFlashcard(ctx, flashcardID)
 	if err != nil {
 		log.Printf("[Core.CompleteReview] Failed to get flashcard: %v", err)
 		return fmt.Errorf("failed to get flashcard: %w", err)
 	}
-	
+
 	// Implement SRS logic: increment stage and calculate next review time
 	// Stage 0: New card -> 1 day
 	// Stage 1: 1 day -> 3 days
@@ -142,10 +142,10 @@ func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) e
 	// Stage 3: 7 days -> 15 days
 	// Stage 4: 15 days -> 30 days
 	// Stage 5+: 30 days (max)
-	
+
 	currentStage := card.Stage
 	nextStage := currentStage + 1
-	
+
 	// Calculate next review interval based on new stage
 	var intervalDays int
 	switch nextStage {
@@ -164,18 +164,18 @@ func (c *LearningCore) CompleteReview(ctx context.Context, flashcardID string) e
 			nextStage = 5 // Cap at stage 5
 		}
 	}
-	
+
 	nextReviewAt := time.Now().Add(time.Duration(intervalDays) * 24 * time.Hour)
-	
-	log.Printf("[Core.CompleteReview] Advancing from stage %d to %d (next review in %d days)", 
+
+	log.Printf("[Core.CompleteReview] Advancing from stage %d to %d (next review in %d days)",
 		currentStage, nextStage, intervalDays)
-	
+
 	err = c.store.UpdateFlashcard(ctx, flashcardID, nextStage, nextReviewAt)
 	if err != nil {
 		log.Printf("[Core.CompleteReview] Update failed: %v", err)
 		return err
 	}
-	
+
 	log.Printf("[Core.CompleteReview] Updated successfully to stage %d", nextStage)
 	return nil
 }
@@ -186,14 +186,48 @@ func (c *LearningCore) GetAllTags(ctx context.Context, userID string) ([]string,
 
 func (c *LearningCore) GetNotificationStatus(ctx context.Context, userID string) (int32, bool, error) {
 	log.Printf("[Core.GetNotificationStatus] Getting notification status for userID: %s", userID)
-	
+
 	count, err := c.store.GetDueFlashcardsCount(ctx, userID)
 	if err != nil {
 		log.Printf("[Core.GetNotificationStatus] Failed to get count: %v", err)
 		return 0, false, err
 	}
-	
+
 	hasDue := count > 0
 	log.Printf("[Core.GetNotificationStatus] User has %d due flashcards", count)
 	return count, hasDue, nil
+}
+
+func (c *LearningCore) GetMaterialSummary(ctx context.Context, userID, materialID string) (string, string, error) {
+	log.Printf("[Core.GetMaterialSummary] Getting summary for materialID: %s, userID: %s", materialID, userID)
+
+	// 1. Fetch material content and existing summary
+	content, summary, title, err := c.store.GetMaterialContent(ctx, userID, materialID)
+	if err != nil {
+		log.Printf("[Core.GetMaterialSummary] Failed to get material: %v", err)
+		return "", "", fmt.Errorf("failed to get material: %w", err)
+	}
+
+	// 2. If summary exists, return it
+	if summary != "" {
+		log.Printf("[Core.GetMaterialSummary] Returning existing summary, length: %d", len(summary))
+		return summary, title, nil
+	}
+
+	// 3. Generate summary via AI
+	log.Printf("[Core.GetMaterialSummary] No summary found, generating via AI...")
+	summary, err = c.ai.GenerateSummary(content)
+	if err != nil {
+		log.Printf("[Core.GetMaterialSummary] AI generation failed: %v", err)
+		return "", title, fmt.Errorf("failed to generate summary: %w", err)
+	}
+
+	// 4. Save summary to database
+	if err := c.store.UpdateMaterialSummary(ctx, materialID, summary); err != nil {
+		log.Printf("[Core.GetMaterialSummary] Failed to save summary: %v", err)
+		// Continue - we can still return the generated summary
+	}
+
+	log.Printf("[Core.GetMaterialSummary] Summary generated and saved, length: %d", len(summary))
+	return summary, title, nil
 }

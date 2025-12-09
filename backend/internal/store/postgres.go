@@ -164,26 +164,26 @@ func (s *PostgresStore) GetFlashcard(ctx context.Context, id string) (*learning.
 		WHERE f.id = $1;
 	`
 	row := s.db.QueryRow(ctx, query, id)
-	
+
 	var card learning.Flashcard
 	var title string
 	var matID string
 	var nextReviewAt time.Time
-	
+
 	if err := row.Scan(&card.Id, &card.Question, &card.Answer, &card.Stage, &nextReviewAt, &title, &matID); err != nil {
 		log.Printf("[Store.GetFlashcard] Query failed: %v", err)
 		return nil, fmt.Errorf("failed to query flashcard: %w", err)
 	}
-	
+
 	card.MaterialTitle = title
-	
+
 	tags, err := s.GetMaterialTags(ctx, matID)
 	if err != nil {
 		log.Printf("[Store.GetFlashcard] Failed to get tags: %v", err)
 		tags = []string{}
 	}
 	card.Tags = tags
-	
+
 	log.Printf("[Store.GetFlashcard] Found flashcard at stage %d", card.Stage)
 	return &card, nil
 }
@@ -230,7 +230,7 @@ func (s *PostgresStore) GetDueFlashcards(ctx context.Context, userID, materialID
 
 func (s *PostgresStore) GetDueMaterials(ctx context.Context, userID string, page, pageSize int32) ([]*learning.MaterialSummary, int32, error) {
 	log.Printf("[Store.GetDueMaterials] Querying materials for userID: %s, page: %d, pageSize: %d", userID, page, pageSize)
-	
+
 	// First, get the total count
 	countQuery := `
 		SELECT COUNT(DISTINCT m.id)
@@ -242,10 +242,10 @@ func (s *PostgresStore) GetDueMaterials(ctx context.Context, userID string, page
 	if err := s.db.QueryRow(ctx, countQuery, userID).Scan(&totalCount); err != nil {
 		return nil, 0, fmt.Errorf("failed to count materials: %w", err)
 	}
-	
+
 	// Calculate offset
 	offset := (page - 1) * pageSize
-	
+
 	// Get paginated results
 	query := `
 		SELECT m.id, m.title, COUNT(f.id) as due_count
@@ -278,7 +278,7 @@ func (s *PostgresStore) GetDueMaterials(ctx context.Context, userID string, page
 
 		materials = append(materials, &m)
 	}
-	
+
 	log.Printf("[Store.GetDueMaterials] Found %d materials (total: %d)", len(materials), totalCount)
 	return materials, totalCount, nil
 }
@@ -313,5 +313,38 @@ func (s *PostgresStore) UpdateFlashcard(ctx context.Context, id string, stage in
 		return fmt.Errorf("failed to update flashcard: %w", err)
 	}
 	log.Printf("[Store.UpdateFlashcard] Flashcard updated successfully")
+	return nil
+}
+
+func (s *PostgresStore) GetMaterialContent(ctx context.Context, userID, materialID string) (string, string, string, error) {
+	log.Printf("[Store.GetMaterialContent] Fetching material: %s for user: %s", materialID, userID)
+	query := `
+		SELECT content, COALESCE(summary, ''), title
+		FROM materials
+		WHERE id = $1 AND user_id = $2;
+	`
+	var content, summary, title string
+	err := s.db.QueryRow(ctx, query, materialID, userID).Scan(&content, &summary, &title)
+	if err != nil {
+		log.Printf("[Store.GetMaterialContent] Query failed: %v", err)
+		return "", "", "", fmt.Errorf("failed to get material content: %w", err)
+	}
+	log.Printf("[Store.GetMaterialContent] Found material, content length: %d, has summary: %v", len(content), summary != "")
+	return content, summary, title, nil
+}
+
+func (s *PostgresStore) UpdateMaterialSummary(ctx context.Context, materialID, summary string) error {
+	log.Printf("[Store.UpdateMaterialSummary] Updating summary for material: %s", materialID)
+	query := `
+		UPDATE materials
+		SET summary = $1, updated_at = NOW()
+		WHERE id = $2;
+	`
+	_, err := s.db.Exec(ctx, query, summary, materialID)
+	if err != nil {
+		log.Printf("[Store.UpdateMaterialSummary] Update failed: %v", err)
+		return fmt.Errorf("failed to update material summary: %w", err)
+	}
+	log.Printf("[Store.UpdateMaterialSummary] Summary updated successfully")
 	return nil
 }
