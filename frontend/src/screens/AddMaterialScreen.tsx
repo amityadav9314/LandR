@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
 import { useTheme, ThemeColors } from '../utils/theme';
+
+// Conditionally import ImagePicker (only works on native)
+let ImagePicker: any = null;
+if (Platform.OS !== 'web') {
+    ImagePicker = require('expo-image-picker');
+}
 
 type MaterialType = 'TEXT' | 'LINK' | 'IMAGE' | 'YOUTUBE';
 
@@ -43,6 +48,10 @@ export const AddMaterialScreen = () => {
     });
 
     const pickImage = async () => {
+        if (!ImagePicker) {
+            Alert.alert('Not Available', 'Image picker is only available on mobile devices.');
+            return;
+        }
         console.log('[ADD_MATERIAL] Opening image picker...');
 
         // Request permission
@@ -67,6 +76,10 @@ export const AddMaterialScreen = () => {
     };
 
     const takePhoto = async () => {
+        if (!ImagePicker) {
+            Alert.alert('Not Available', 'Camera is only available on mobile devices.');
+            return;
+        }
         console.log('[ADD_MATERIAL] Opening camera...');
 
         // Request permission

@@ -37,6 +37,8 @@ start-backend:
 start-frontend:
 	@echo "🛑 Stopping previous frontend..."
 	@lsof -ti:8081 | xargs -r kill -9 2>/dev/null || true
+	@echo "🔍 Type checking TypeScript..."
+	@cd $(FRONTEND_DIR) && npm run tsc
 	@echo "🧹 Clearing Metro cache..."
 	@rm -rf $(FRONTEND_DIR)/.expo 2>/dev/null || true
 	@rm -rf $(FRONTEND_DIR)/node_modules/.cache 2>/dev/null || true
