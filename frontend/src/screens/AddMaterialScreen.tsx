@@ -7,7 +7,7 @@ import { learningClient } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
 import { useTheme, ThemeColors } from '../utils/theme';
 
-type MaterialType = 'TEXT' | 'LINK' | 'IMAGE';
+type MaterialType = 'TEXT' | 'LINK' | 'IMAGE' | 'YOUTUBE';
 
 export const AddMaterialScreen = () => {
     const navigation = useNavigation();
@@ -119,7 +119,7 @@ export const AddMaterialScreen = () => {
 
                 {/* Type Selector */}
                 <View style={styles.typeContainer}>
-                    {(['TEXT', 'LINK', 'IMAGE'] as MaterialType[]).map((t) => (
+                    {(['TEXT', 'LINK', 'IMAGE', 'YOUTUBE'] as MaterialType[]).map((t) => (
                         <TouchableOpacity
                             key={t}
                             style={[styles.typeButton, type === t && styles.activeType]}
@@ -128,8 +128,11 @@ export const AddMaterialScreen = () => {
                                 if (t !== 'IMAGE') clearImage();
                             }}
                         >
-                            <Text style={[styles.typeText, type === t && styles.activeTypeText]}>
-                                {t === 'TEXT' ? '📝 Text' : t === 'LINK' ? '🔗 Link' : '📸 Image'}
+                            <Text style={styles.typeIcon}>
+                                {t === 'TEXT' ? '📝' : t === 'LINK' ? '🔗' : t === 'IMAGE' ? '📸' : '▶️'}
+                            </Text>
+                            <Text style={[styles.typeLabel, type === t && styles.activeTypeText]}>
+                                {t === 'TEXT' ? 'Text' : t === 'LINK' ? 'Link' : t === 'IMAGE' ? 'Image' : 'YouTube'}
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -164,16 +167,27 @@ export const AddMaterialScreen = () => {
                         </Text>
                     </View>
                 ) : (
-                    <TextInput
-                        style={styles.input}
-                        placeholder={type === 'TEXT' ? "Paste your text here..." : "Enter URL here..."}
-                        placeholderTextColor={colors.textPlaceholder}
-                        multiline={type === 'TEXT'}
-                        numberOfLines={type === 'TEXT' ? 10 : 1}
-                        value={content}
-                        onChangeText={setContent}
-                        textAlignVertical="top"
-                    />
+                    <View>
+                        <TextInput
+                            style={styles.input}
+                            placeholder={
+                                type === 'TEXT' ? "Paste your text here..." :
+                                    type === 'LINK' ? "Enter URL here..." :
+                                        "Paste YouTube URL here..."
+                            }
+                            placeholderTextColor={colors.textPlaceholder}
+                            multiline={type === 'TEXT'}
+                            numberOfLines={type === 'TEXT' ? 10 : 1}
+                            value={content}
+                            onChangeText={setContent}
+                            textAlignVertical="top"
+                        />
+                        {type === 'YOUTUBE' && (
+                            <Text style={styles.hint}>
+                                ▶️ Enter YouTube video URL to extract transcript and generate flashcards
+                            </Text>
+                        )}
+                    </View>
                 )}
 
                 {/* Submit Button */}
@@ -212,7 +226,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     },
     typeButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },
     activeType: { backgroundColor: colors.card, elevation: 2 },
-    typeText: { fontWeight: '600', color: colors.textSecondary, fontSize: 13 },
+    typeIcon: { fontSize: 24, marginBottom: 4 },
+    typeLabel: { fontWeight: '600', color: colors.textSecondary, fontSize: 11 },
     activeTypeText: { color: colors.primary },
     input: {
         borderWidth: 1,

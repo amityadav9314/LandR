@@ -10,6 +10,7 @@ import (
 	"github.com/amityadav/landr/internal/ai"
 	"github.com/amityadav/landr/internal/scraper"
 	"github.com/amityadav/landr/internal/store"
+	"github.com/amityadav/landr/internal/youtube"
 	"github.com/amityadav/landr/pkg/pb/learning"
 )
 
@@ -17,6 +18,7 @@ type LearningCore struct {
 	store   store.Store
 	scraper *scraper.Scraper
 	ai      *ai.Client
+	youtube *youtube.TranscriptExtractor
 }
 
 func NewLearningCore(s store.Store, scraper *scraper.Scraper, ai *ai.Client) *LearningCore {
@@ -24,6 +26,7 @@ func NewLearningCore(s store.Store, scraper *scraper.Scraper, ai *ai.Client) *Le
 		store:   s,
 		scraper: scraper,
 		ai:      ai,
+		youtube: youtube.NewTranscriptExtractor(),
 	}
 }
 
@@ -57,6 +60,16 @@ func (c *LearningCore) AddMaterial(ctx context.Context, userID, matType, content
 		finalContent = extractedText
 		log.Printf("[Core.AddMaterial] OCR extracted text length: %d", len(finalContent))
 
+	case "YOUTUBE":
+		log.Printf("[Core.AddMaterial] Extracting YouTube transcript: %s", content)
+		transcript, err := c.youtube.GetTranscript(ctx, content)
+		if err != nil {
+			log.Printf("[Core.AddMaterial] YouTube transcript failed: %v", err)
+			return "", 0, "", nil, fmt.Errorf("failed to get youtube transcript: %w", err)
+		}
+		finalContent = transcript
+		log.Printf("[Core.AddMaterial] YouTube transcript length: %d", len(finalContent))
+
 	case "TEXT":
 		log.Printf("[Core.AddMaterial] Using provided text content, length: %d", len(content))
 
@@ -83,11 +96,29 @@ func (c *LearningCore) AddMaterial(ctx context.Context, userID, matType, content
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// Goroutine 1: Generate flashcards
+	// Goroutine 1: Generate flashcards (with chunking for large content)
 	go func() {
 		defer wg.Done()
 		log.Printf("[Core.AddMaterial] Goroutine 1: Generating flashcards...")
-		title, tags, cards, flashcardErr = c.ai.GenerateFlashcards(finalContent, userTags)
+
+		// Check if content is large enough to need chunking
+		tokenEstimate := ai.EstimateTokens(finalContent)
+		log.Printf("[Core.AddMaterial] Estimated tokens: %d", tokenEstimate)
+
+		if tokenEstimate > 8000 {
+			// Large content - use chunking with parallel processing
+			log.Printf("[Core.AddMaterial] Large content detected, using chunking...")
+			chunks := ai.SplitIntoChunks(finalContent, ai.ChunkSize, ai.ChunkOverlap)
+			title, tags, cards, flashcardErr = c.ai.ProcessChunksParallel(ctx, chunks, userTags)
+		} else {
+			// Normal content - process directly with retry
+			flashcardErr = ai.RetryWithBackoff(ctx, "Flashcards", func() error {
+				var err error
+				title, tags, cards, err = c.ai.GenerateFlashcards(finalContent, userTags)
+				return err
+			})
+		}
+
 		if flashcardErr != nil {
 			log.Printf("[Core.AddMaterial] Flashcard generation failed: %v", flashcardErr)
 		} else {

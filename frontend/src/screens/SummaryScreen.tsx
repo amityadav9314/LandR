@@ -24,9 +24,14 @@ export const SummaryScreen = () => {
         queryKey: ['materialSummary', materialId],
         queryFn: async () => {
             console.log(`[SummaryScreen] Fetching summary for material: ${materialId}`);
-            const response = await learningClient.getMaterialSummary({ materialId });
-            console.log('[SummaryScreen] Got summary, length:', response.summary?.length || 0);
-            return response;
+            try {
+                const response = await learningClient.getMaterialSummary({ materialId });
+                console.log('[SummaryScreen] Got summary, length:', response.summary?.length || 0);
+                return response;
+            } catch (err) {
+                console.error('[SummaryScreen] Error fetching summary:', err);
+                throw err;
+            }
         },
     });
 

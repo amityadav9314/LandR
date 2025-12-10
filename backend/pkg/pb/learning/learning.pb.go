@@ -25,7 +25,7 @@ const (
 
 type AddMaterialRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` // "TEXT", "LINK", or "IMAGE"
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` // "TEXT", "LINK", "IMAGE", or "YOUTUBE"
 	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	ExistingTags  []string               `protobuf:"bytes,3,rep,name=existing_tags,json=existingTags,proto3" json:"existing_tags,omitempty"`
 	ImageData     string                 `protobuf:"bytes,4,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"` // Base64 encoded image for IMAGE type

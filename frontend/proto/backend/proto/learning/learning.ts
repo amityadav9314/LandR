@@ -13,7 +13,7 @@ import { Timestamp } from "../../google/protobuf/timestamp";
 export const protobufPackage = "learning";
 
 export interface AddMaterialRequest {
-  /** "TEXT", "LINK", or "IMAGE" */
+  /** "TEXT", "LINK", "IMAGE", or "YOUTUBE" */
   type: string;
   content: string;
   existingTags: string[];

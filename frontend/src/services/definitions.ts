@@ -1,5 +1,16 @@
 import { AuthServiceImplementation, LoginRequest, LoginResponse } from '../../proto/backend/proto/auth/auth';
-import { LearningServiceImplementation, AddMaterialRequest, AddMaterialResponse, FlashcardList, CompleteReviewRequest, GetDueMaterialsRequest, GetDueMaterialsResponse, GetDueFlashcardsRequest, GetAllTagsResponse, NotificationStatusResponse } from '../../proto/backend/proto/learning/learning';
+import {
+    LearningServiceImplementation,
+    AddMaterialRequest, AddMaterialResponse,
+    FlashcardList,
+    CompleteReviewRequest, FailReviewRequest, UpdateFlashcardRequest,
+    DeleteMaterialRequest,
+    GetDueMaterialsRequest, GetDueMaterialsResponse,
+    GetDueFlashcardsRequest,
+    GetAllTagsResponse,
+    NotificationStatusResponse,
+    GetMaterialSummaryRequest, GetMaterialSummaryResponse
+} from '../../proto/backend/proto/learning/learning';
 import { Empty } from '../../proto/backend/google/protobuf/empty';
 
 export const AuthServiceDefinition = {
@@ -53,6 +64,30 @@ export const LearningServiceDefinition = {
             responseStream: false,
             options: {},
         },
+        failReview: {
+            name: 'FailReview',
+            requestType: FailReviewRequest,
+            requestStream: false,
+            responseType: Empty,
+            responseStream: false,
+            options: {},
+        },
+        updateFlashcard: {
+            name: 'UpdateFlashcard',
+            requestType: UpdateFlashcardRequest,
+            requestStream: false,
+            responseType: Empty,
+            responseStream: false,
+            options: {},
+        },
+        deleteMaterial: {
+            name: 'DeleteMaterial',
+            requestType: DeleteMaterialRequest,
+            requestStream: false,
+            responseType: Empty,
+            responseStream: false,
+            options: {},
+        },
         getAllTags: {
             name: 'GetAllTags',
             requestType: Empty,
@@ -69,5 +104,14 @@ export const LearningServiceDefinition = {
             responseStream: false,
             options: {},
         },
+        getMaterialSummary: {
+            name: 'GetMaterialSummary',
+            requestType: GetMaterialSummaryRequest,
+            requestStream: false,
+            responseType: GetMaterialSummaryResponse,
+            responseStream: false,
+            options: {},
+        },
     },
 } as const;
+
