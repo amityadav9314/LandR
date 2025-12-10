@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { Platform, BackHandler } from 'react-native';
 
 type ScreenName = 'Login' | 'Home' | 'AddMaterial' | 'MaterialDetail' | 'Review' | 'Summary';
@@ -15,6 +15,12 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 
 export const NavigationProvider = ({ children }: { children: ReactNode }) => {
     const [stack, setStack] = useState<{ screen: ScreenName; params: any }[]>([{ screen: 'Home', params: {} }]);
+    const stackRef = useRef(stack);
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        stackRef.current = stack;
+    }, [stack]);
 
     const current = stack[stack.length - 1];
     const canGoBack = stack.length > 1;
@@ -23,7 +29,8 @@ export const NavigationProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (Platform.OS === 'android') {
             const onBackPress = () => {
-                if (stack.length > 1) {
+                // Use ref to get current stack value (avoids stale closure)
+                if (stackRef.current.length > 1) {
                     // If we can go back in our navigation stack, do so
                     setStack(prev => prev.slice(0, -1));
                     return true; // Prevent default behavior (exit app)
@@ -34,7 +41,7 @@ export const NavigationProvider = ({ children }: { children: ReactNode }) => {
             const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
             return () => subscription.remove();
         }
-    }, [stack.length]);
+    }, []); // Empty deps - only set up once
 
     // Handle Browser Back Button (Web only)
     useEffect(() => {
