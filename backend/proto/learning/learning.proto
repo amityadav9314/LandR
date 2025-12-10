@@ -21,9 +21,10 @@ service LearningService {
 }
 
 message AddMaterialRequest {
-  string type = 1; // "TEXT" or "LINK"
+  string type = 1; // "TEXT", "LINK", or "IMAGE"
   string content = 2;
   repeated string existing_tags = 3;
+  string image_data = 4; // Base64 encoded image for IMAGE type
 }
 
 message AddMaterialResponse {

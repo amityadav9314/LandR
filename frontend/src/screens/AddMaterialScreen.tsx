@@ -1,23 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '../navigation/ManualRouter';
 import { learningClient } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
 import { useTheme, ThemeColors } from '../utils/theme';
+
+type MaterialType = 'TEXT' | 'LINK' | 'IMAGE';
 
 export const AddMaterialScreen = () => {
     const navigation = useNavigation();
     const queryClient = useQueryClient();
     const { colors } = useTheme();
     const [content, setContent] = useState('');
-    const [type, setType] = useState<'TEXT' | 'LINK'>('TEXT');
+    const [type, setType] = useState<MaterialType>('TEXT');
+    const [imageData, setImageData] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const mutation = useMutation({
         mutationFn: async () => {
+            console.log('[ADD_MATERIAL] Submitting material, type:', type);
             return await learningClient.addMaterial({
                 type,
-                content,
+                content: type === 'IMAGE' ? '' : content,
+                imageData: type === 'IMAGE' ? imageData || '' : '',
             });
         },
         onSuccess: (data) => {
@@ -30,17 +37,76 @@ export const AddMaterialScreen = () => {
             navigation.goBack();
         },
         onError: (error) => {
-            console.error(error);
+            console.error('[ADD_MATERIAL] Error:', error);
             Alert.alert('Error', 'Failed to add material. Please try again.');
         },
     });
 
-    const handleSubmit = () => {
-        if (!content.trim()) {
-            Alert.alert('Validation', 'Please enter some content');
+    const pickImage = async () => {
+        console.log('[ADD_MATERIAL] Opening image picker...');
+
+        // Request permission
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Required', 'Please allow access to your photo library.');
             return;
         }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.8,
+            base64: true,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            console.log('[ADD_MATERIAL] Image selected, base64 length:', result.assets[0].base64?.length);
+            setImageData(result.assets[0].base64 || null);
+            setImagePreview(result.assets[0].uri);
+        }
+    };
+
+    const takePhoto = async () => {
+        console.log('[ADD_MATERIAL] Opening camera...');
+
+        // Request permission
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Required', 'Please allow access to your camera.');
+            return;
+        }
+
+        const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            quality: 0.8,
+            base64: true,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            console.log('[ADD_MATERIAL] Photo taken, base64 length:', result.assets[0].base64?.length);
+            setImageData(result.assets[0].base64 || null);
+            setImagePreview(result.assets[0].uri);
+        }
+    };
+
+    const handleSubmit = () => {
+        if (type === 'IMAGE') {
+            if (!imageData) {
+                Alert.alert('Validation', 'Please select or take a photo first');
+                return;
+            }
+        } else {
+            if (!content.trim()) {
+                Alert.alert('Validation', 'Please enter some content');
+                return;
+            }
+        }
         mutation.mutate();
+    };
+
+    const clearImage = () => {
+        setImageData(null);
+        setImagePreview(null);
     };
 
     const styles = createStyles(colors);
@@ -48,67 +114,95 @@ export const AddMaterialScreen = () => {
     return (
         <View style={styles.container}>
             <AppHeader />
-            <View style={styles.contentContainer}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
                 <Text style={styles.title}>Add New Material</Text>
 
+                {/* Type Selector */}
                 <View style={styles.typeContainer}>
-                    <TouchableOpacity
-                        style={[styles.typeButton, type === 'TEXT' && styles.activeType]}
-                        onPress={() => setType('TEXT')}
-                    >
-                        <Text style={[styles.typeText, type === 'TEXT' && styles.activeTypeText]}>Text</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.typeButton, type === 'LINK' && styles.activeType]}
-                        onPress={() => setType('LINK')}
-                    >
-                        <Text style={[styles.typeText, type === 'LINK' && styles.activeTypeText]}>Link</Text>
-                    </TouchableOpacity>
+                    {(['TEXT', 'LINK', 'IMAGE'] as MaterialType[]).map((t) => (
+                        <TouchableOpacity
+                            key={t}
+                            style={[styles.typeButton, type === t && styles.activeType]}
+                            onPress={() => {
+                                setType(t);
+                                if (t !== 'IMAGE') clearImage();
+                            }}
+                        >
+                            <Text style={[styles.typeText, type === t && styles.activeTypeText]}>
+                                {t === 'TEXT' ? '📝 Text' : t === 'LINK' ? '🔗 Link' : '📸 Image'}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder={type === 'TEXT' ? "Paste your text here..." : "Enter URL here..."}
-                    placeholderTextColor={colors.textPlaceholder}
-                    multiline={type === 'TEXT'}
-                    numberOfLines={type === 'TEXT' ? 10 : 1}
-                    value={content}
-                    onChangeText={setContent}
-                    textAlignVertical="top"
-                />
+                {/* Content Input or Image Picker */}
+                {type === 'IMAGE' ? (
+                    <View style={styles.imageSection}>
+                        {imagePreview ? (
+                            <View style={styles.imagePreviewContainer}>
+                                <Image source={{ uri: imagePreview }} style={styles.imagePreview} />
+                                <TouchableOpacity style={styles.clearImageButton} onPress={clearImage}>
+                                    <Text style={styles.clearImageText}>✕ Remove</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={styles.imagePickerButtons}>
+                                <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+                                    <Text style={styles.imagePickerIcon}>🖼️</Text>
+                                    <Text style={styles.imagePickerText}>Gallery</Text>
+                                </TouchableOpacity>
+                                {Platform.OS !== 'web' && (
+                                    <TouchableOpacity style={styles.imagePickerButton} onPress={takePhoto}>
+                                        <Text style={styles.imagePickerIcon}>📷</Text>
+                                        <Text style={styles.imagePickerText}>Camera</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        )}
+                        <Text style={styles.hint}>
+                            📌 Take a photo of your notes, textbook, or handwritten content
+                        </Text>
+                    </View>
+                ) : (
+                    <TextInput
+                        style={styles.input}
+                        placeholder={type === 'TEXT' ? "Paste your text here..." : "Enter URL here..."}
+                        placeholderTextColor={colors.textPlaceholder}
+                        multiline={type === 'TEXT'}
+                        numberOfLines={type === 'TEXT' ? 10 : 1}
+                        value={content}
+                        onChangeText={setContent}
+                        textAlignVertical="top"
+                    />
+                )}
 
+                {/* Submit Button */}
                 <TouchableOpacity
-                    style={styles.submitButton}
+                    style={[styles.submitButton, mutation.isPending && styles.submitButtonDisabled]}
                     onPress={handleSubmit}
                     disabled={mutation.isPending}
                 >
                     {mutation.isPending ? (
-                        <ActivityIndicator color={colors.textInverse} />
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator color={colors.textInverse} />
+                            <Text style={styles.loadingText}>
+                                {type === 'IMAGE' ? 'Extracting text & generating...' : 'Generating flashcards...'}
+                            </Text>
+                        </View>
                     ) : (
                         <Text style={styles.submitText}>Generate Flashcards</Text>
                     )}
                 </TouchableOpacity>
-            </View>
+            </ScrollView>
         </View>
     );
 };
 
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-    contentContainer: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: colors.card,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: colors.textPrimary,
-    },
+    container: { flex: 1, backgroundColor: colors.background },
+    scrollView: { flex: 1 },
+    contentContainer: { padding: 20, backgroundColor: colors.card, flexGrow: 1 },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: colors.textPrimary },
     typeContainer: {
         flexDirection: 'row',
         marginBottom: 20,
@@ -116,23 +210,10 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
         borderRadius: 8,
         padding: 4,
     },
-    typeButton: {
-        flex: 1,
-        paddingVertical: 10,
-        alignItems: 'center',
-        borderRadius: 6,
-    },
-    activeType: {
-        backgroundColor: colors.card,
-        elevation: 2,
-    },
-    typeText: {
-        fontWeight: '600',
-        color: colors.textSecondary,
-    },
-    activeTypeText: {
-        color: colors.primary,
-    },
+    typeButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },
+    activeType: { backgroundColor: colors.card, elevation: 2 },
+    typeText: { fontWeight: '600', color: colors.textSecondary, fontSize: 13 },
+    activeTypeText: { color: colors.primary },
     input: {
         borderWidth: 1,
         borderColor: colors.inputBorder,
@@ -144,15 +225,39 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
         backgroundColor: colors.input,
         color: colors.textPrimary,
     },
+    imageSection: { marginBottom: 20 },
+    imagePickerButtons: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+    imagePickerButton: {
+        flex: 1,
+        backgroundColor: colors.cardAlt,
+        borderRadius: 12,
+        paddingVertical: 30,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: colors.inputBorder,
+        borderStyle: 'dashed',
+    },
+    imagePickerIcon: { fontSize: 32, marginBottom: 8 },
+    imagePickerText: { fontSize: 14, color: colors.textSecondary, fontWeight: '600' },
+    imagePreviewContainer: { alignItems: 'center', marginBottom: 12 },
+    imagePreview: { width: '100%', height: 200, borderRadius: 12, resizeMode: 'cover' },
+    clearImageButton: {
+        marginTop: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: colors.error,
+        borderRadius: 8,
+    },
+    clearImageText: { color: colors.textInverse, fontWeight: '600' },
+    hint: { fontSize: 13, color: colors.textSecondary, textAlign: 'center', fontStyle: 'italic' },
     submitButton: {
         backgroundColor: colors.primary,
         paddingVertical: 15,
         borderRadius: 8,
         alignItems: 'center',
     },
-    submitText: {
-        color: colors.textInverse,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+    submitButtonDisabled: { opacity: 0.7 },
+    submitText: { color: colors.textInverse, fontSize: 16, fontWeight: 'bold' },
+    loadingContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    loadingText: { color: colors.textInverse, fontSize: 14 },
 });

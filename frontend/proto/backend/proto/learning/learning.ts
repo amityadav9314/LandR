@@ -13,10 +13,12 @@ import { Timestamp } from "../../google/protobuf/timestamp";
 export const protobufPackage = "learning";
 
 export interface AddMaterialRequest {
-  /** "TEXT" or "LINK" */
+  /** "TEXT", "LINK", or "IMAGE" */
   type: string;
   content: string;
   existingTags: string[];
+  /** Base64 encoded image for IMAGE type */
+  imageData: string;
 }
 
 export interface AddMaterialResponse {
@@ -101,7 +103,7 @@ export interface UpdateFlashcardRequest {
 }
 
 function createBaseAddMaterialRequest(): AddMaterialRequest {
-  return { type: "", content: "", existingTags: [] };
+  return { type: "", content: "", existingTags: [], imageData: "" };
 }
 
 export const AddMaterialRequest: MessageFns<AddMaterialRequest> = {
@@ -114,6 +116,9 @@ export const AddMaterialRequest: MessageFns<AddMaterialRequest> = {
     }
     for (const v of message.existingTags) {
       writer.uint32(26).string(v!);
+    }
+    if (message.imageData !== "") {
+      writer.uint32(34).string(message.imageData);
     }
     return writer;
   },
@@ -149,6 +154,14 @@ export const AddMaterialRequest: MessageFns<AddMaterialRequest> = {
           message.existingTags.push(reader.string());
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.imageData = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -165,6 +178,7 @@ export const AddMaterialRequest: MessageFns<AddMaterialRequest> = {
       existingTags: globalThis.Array.isArray(object?.existingTags)
         ? object.existingTags.map((e: any) => globalThis.String(e))
         : [],
+      imageData: isSet(object.imageData) ? globalThis.String(object.imageData) : "",
     };
   },
 
@@ -179,6 +193,9 @@ export const AddMaterialRequest: MessageFns<AddMaterialRequest> = {
     if (message.existingTags?.length) {
       obj.existingTags = message.existingTags;
     }
+    if (message.imageData !== "") {
+      obj.imageData = message.imageData;
+    }
     return obj;
   },
 
@@ -190,6 +207,7 @@ export const AddMaterialRequest: MessageFns<AddMaterialRequest> = {
     message.type = object.type ?? "";
     message.content = object.content ?? "";
     message.existingTags = object.existingTags?.map((e) => e) || [];
+    message.imageData = object.imageData ?? "";
     return message;
   },
 };

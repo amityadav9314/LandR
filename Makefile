@@ -11,6 +11,9 @@ help:
 	@echo "  make start-backend   - Stop, build, and start backend"
 	@echo "  make start-frontend  - Stop, clear cache, and start frontend"
 	@echo "  make apk             - Build release APK"
+	@echo "  make android         - Rebuild debug APK and install (use after adding Expo packages)"
+	@echo "  make android-debug   - Build debug APK only"
+	@echo "  make android-install - Install debug APK on emulator/device"
 	@echo "  make stop            - Stop all servers"
 	@echo "  make db-start        - Start PostgreSQL (Docker)"
 	@echo "  make proto           - Generate proto files"
@@ -55,6 +58,23 @@ apk:
 	@echo "✅ APK built successfully!"
 	@echo "📦 Location: $(FRONTEND_DIR)/android/app/build/outputs/apk/release/app-release.apk"
 
+# Build debug APK with native modules (use after adding new Expo packages)
+android-debug:
+	@echo "🔨 Building Android debug APK with native modules..."
+	@cd $(FRONTEND_DIR) && npx expo prebuild --platform android --clean
+	@cd $(FRONTEND_DIR)/android && ./gradlew assembleDebug
+	@echo "✅ Debug APK built: $(FRONTEND_DIR)/android/app/build/outputs/apk/debug/app-debug.apk"
+
+# Install debug APK on emulator/device
+android-install:
+	@echo "📲 Installing debug APK..."
+	@adb install -r $(FRONTEND_DIR)/android/app/build/outputs/apk/debug/app-debug.apk
+	@echo "✅ APK installed!"
+
+# Build and install in one command
+android: android-debug android-install
+	@echo "🚀 Android app ready!"
+
 # ============================================
 # STOP
 # ============================================
@@ -62,7 +82,6 @@ stop:
 	@echo "Stopping all servers..."
 	@lsof -ti:8080 | xargs -r kill -9 2>/dev/null || true
 	@lsof -ti:50051 | xargs -r kill -9 2>/dev/null || true
-	@lsof -ti:8081 | xargs -r kill -9 2>/dev/null || true
 	@echo "All servers stopped."
 
 # ============================================

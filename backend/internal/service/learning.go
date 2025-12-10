@@ -34,7 +34,7 @@ func (s *LearningService) AddMaterial(ctx context.Context, req *learning.AddMate
 	}
 	log.Printf("[AddMaterial] Using userID: %s", userID)
 
-	materialID, count, title, tags, err := s.core.AddMaterial(ctx, userID, req.Type, req.Content, req.ExistingTags)
+	materialID, count, title, tags, err := s.core.AddMaterial(ctx, userID, req.Type, req.Content, req.ImageData, req.ExistingTags)
 	if err != nil {
 		log.Printf("[AddMaterial] ERROR: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to add material: %v", err)

@@ -27,12 +27,14 @@ func NewLearningCore(s store.Store, scraper *scraper.Scraper, ai *ai.Client) *Le
 	}
 }
 
-func (c *LearningCore) AddMaterial(ctx context.Context, userID, matType, content string, existingTags []string) (string, int32, string, []string, error) {
+func (c *LearningCore) AddMaterial(ctx context.Context, userID, matType, content, imageData string, existingTags []string) (string, int32, string, []string, error) {
 	log.Printf("[Core.AddMaterial] Starting - UserID: %s, Type: %s", userID, matType)
 
-	// 1. Process Content (Scrape if Link)
+	// 1. Process Content based on type
 	finalContent := content
-	if matType == "LINK" {
+
+	switch matType {
+	case "LINK":
 		log.Printf("[Core.AddMaterial] Scraping URL: %s", content)
 		scraped, err := c.scraper.Scrape(content)
 		if err != nil {
@@ -41,6 +43,25 @@ func (c *LearningCore) AddMaterial(ctx context.Context, userID, matType, content
 		}
 		finalContent = scraped
 		log.Printf("[Core.AddMaterial] Scraped content length: %d", len(finalContent))
+
+	case "IMAGE":
+		log.Printf("[Core.AddMaterial] Extracting text from image, base64 length: %d", len(imageData))
+		if imageData == "" {
+			return "", 0, "", nil, fmt.Errorf("image_data required for IMAGE type")
+		}
+		extractedText, err := c.ai.ExtractTextFromImage(imageData)
+		if err != nil {
+			log.Printf("[Core.AddMaterial] OCR extraction failed: %v", err)
+			return "", 0, "", nil, fmt.Errorf("failed to extract text from image: %w", err)
+		}
+		finalContent = extractedText
+		log.Printf("[Core.AddMaterial] OCR extracted text length: %d", len(finalContent))
+
+	case "TEXT":
+		log.Printf("[Core.AddMaterial] Using provided text content, length: %d", len(content))
+
+	default:
+		log.Printf("[Core.AddMaterial] Unknown type: %s, treating as TEXT", matType)
 	}
 
 	// 2. Fetch existing tags for AI context

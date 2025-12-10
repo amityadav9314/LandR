@@ -32,14 +32,49 @@
 - [x] Add `UpdateFlashcard` RPC
 - [x] Add edit UI in MaterialDetailScreen
 
-### 5. Search & Filter
+### 5. Image OCR ✅
+- [x] Add vision model for text extraction
+- [x] Add `image_data` field to proto
+- [x] Add IMAGE type in `AddMaterialScreen`
+
+---
+
+## 📥 Content Sources (Planned)
+
+### 6. YouTube Transcripts
+- [ ] Add YOUTUBE type
+- [ ] Fetch transcript via API/scraping
+- [ ] Extract video ID from URL
+
+### 7. PDF Upload
+- [ ] Add PDF type
+- [ ] Parse PDF to extract text
+- [ ] Handle multi-page documents
+
+### 8. Voice/Audio
+- [ ] Add AUDIO type
+- [ ] Use Whisper API for speech-to-text
+- [ ] Record from app or upload file
+
+### 9. Chunking for Large Content
+- [ ] Estimate token count (chars / 4)
+- [ ] If < 8k tokens: process normally
+- [ ] If 8k-32k tokens: chunk with overlap
+- [ ] If > 32k tokens: summarize first → then chunk
+- [ ] Deduplicate similar flashcards
+
+---
+
+## 🔧 Technical Improvements
+
+### 10. Search & Filter
 - [ ] Add search by title on HomeScreen
 - [ ] Filter by tags
 
-### 6. DB Transactions
+### 11. DB Transactions
 - [ ] Wrap AddMaterial operations in transaction
 
-### 7. Statistics Dashboard
+### 12. Statistics Dashboard
 - [ ] Track reviews completed
 - [ ] Show learning streak
 - [ ] Add stats screen
@@ -51,4 +86,3 @@
 - [ ] Error retry logic for AI calls
 - [ ] Rate limiting on backend
 - [ ] Remove hardcoded DB credentials
-

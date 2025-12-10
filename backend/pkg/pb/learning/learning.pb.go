@@ -25,9 +25,10 @@ const (
 
 type AddMaterialRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` // "TEXT" or "LINK"
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` // "TEXT", "LINK", or "IMAGE"
 	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	ExistingTags  []string               `protobuf:"bytes,3,rep,name=existing_tags,json=existingTags,proto3" json:"existing_tags,omitempty"`
+	ImageData     string                 `protobuf:"bytes,4,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"` // Base64 encoded image for IMAGE type
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -81,6 +82,13 @@ func (x *AddMaterialRequest) GetExistingTags() []string {
 		return x.ExistingTags
 	}
 	return nil
+}
+
+func (x *AddMaterialRequest) GetImageData() string {
+	if x != nil {
+		return x.ImageData
+	}
+	return ""
 }
 
 type AddMaterialResponse struct {
@@ -915,11 +923,13 @@ var File_backend_proto_learning_learning_proto protoreflect.FileDescriptor
 
 const file_backend_proto_learning_learning_proto_rawDesc = "" +
 	"\n" +
-	"%backend/proto/learning/learning.proto\x12\blearning\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"g\n" +
+	"%backend/proto/learning/learning.proto\x12\blearning\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x86\x01\n" +
 	"\x12AddMaterialRequest\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\x12#\n" +
-	"\rexisting_tags\x18\x03 \x03(\tR\fexistingTags\"\x8f\x01\n" +
+	"\rexisting_tags\x18\x03 \x03(\tR\fexistingTags\x12\x1d\n" +
+	"\n" +
+	"image_data\x18\x04 \x01(\tR\timageData\"\x8f\x01\n" +
 	"\x13AddMaterialResponse\x12\x1f\n" +
 	"\vmaterial_id\x18\x01 \x01(\tR\n" +
 	"materialId\x12-\n" +
